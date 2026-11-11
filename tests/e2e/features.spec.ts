@@ -49,6 +49,44 @@ test('zip export has every badge plus the sheet', async ({ page }) => {
   expect(files.sort()).toEqual(['green_样机.png', 'red (2)_样机.png', 'red_样机.png', '方吧唧与亚克力_商品展示拼图.png'].sort());
 });
 
+test('export list: exclude items from sheet and zip, delete current, remove all', async ({ page }) => {
+  await upload(page, ['red.png', 'green.png', 'blue.png']);
+  await page.locator('.tile').nth(1).locator('.tile-include input').uncheck();
+  await expect(page.locator('.tile').nth(1)).toHaveClass(/excluded/);
+  await expect(page.locator('#sheet')).toContainText('（2）');
+  const [d] = await Promise.all([page.waitForEvent('download'), page.locator('#sheet').click()]);
+  const { pngSize, savedPath } = await import('./helpers');
+  expect(pngSize(await savedPath(d)).width).toBe(140 + 2 * 550);
+  await page.locator('#toggleAllExport').click(); // some excluded → include all
+  await expect(page.locator('.tile.excluded')).toHaveCount(0);
+  await page.locator('#toggleAllExport').click(); // all in → remove all from the list
+  await expect(page.locator('.tile.excluded')).toHaveCount(3);
+  await page.locator('#sheet').click();
+  await expect(page.locator('#toast')).toContainText('拼图列表是空的');
+  await selectTile(page, 0);
+  await page.locator('#deleteCurrent').click();
+  await expect(page.locator('.filename')).toHaveText(['green', 'blue']);
+  page.on('dialog', (dl) => void dl.accept());
+  await page.locator('#clearAll').click();
+  await expect(page.locator('.filename')).toHaveText(['示例插画']);
+});
+
+test('Alt+arrow reorders from the keyboard', async ({ page }) => {
+  await upload(page, ['red.png', 'green.png']);
+  await page.locator('.tile.selected .tile-main').focus();
+  await page.keyboard.press('Alt+ArrowRight');
+  await expect(page.locator('.filename')).toHaveText(['green', 'red']);
+});
+
+test('reset this image restores defaults', async ({ page }) => {
+  await upload(page, ['red.png']);
+  await page.locator('[data-style="acrylic"]').click();
+  await setRange(page, 'artSize', 70);
+  await page.locator('#resetItem').click();
+  await expect(page.locator('[data-style].active')).toHaveAttribute('data-style', 'rounded');
+  await expect(page.locator('#artSize-v')).toHaveText('100%');
+});
+
 test('apply style to all copies composition but keeps colours', async ({ page }) => {
   await upload(page, ['red.png', 'green.png', 'blue.png']);
   const tints = await page.locator('.item-tint').allTextContents();

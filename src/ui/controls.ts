@@ -1,4 +1,5 @@
-import { overlayTint, rgbToHex } from '../color/color';
+import { automaticTint, overlayTint, rgbToHex } from '../color/color';
+import { LOOK_PRESETS, matchPreset } from '../model/presets';
 import { DEFAULT_ITEM } from '../model/defaults';
 import type { Store } from '../model/store';
 import type { BadgeItem, GlobalSettings, ItemSettings, MarkColorMode, MarkMode, OverlayMode, PreviewBg } from '../model/types';
@@ -86,9 +87,23 @@ export class Controls {
     $<HTMLInputElement>('acrylicHole').addEventListener('change', (e) =>
       this.patchItem({ acrylicHole: (e.target as HTMLInputElement).checked }),
     );
-    $<HTMLSelectElement>('overlayMode').addEventListener('change', (e) =>
-      this.patchItem({ overlayMode: (e.target as HTMLSelectElement).value as OverlayMode }),
+    document.querySelectorAll<HTMLButtonElement>('button[data-overlay]').forEach((b) =>
+      b.addEventListener('click', () => this.patchItem({ overlayMode: b.dataset.overlay as OverlayMode })),
     );
+    // Steppers: big ± buttons next to the primary sliders (touch friendly).
+    document.querySelectorAll<HTMLButtonElement>('button[data-step]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const it = this.item;
+        if (!it) return;
+        const key = b.dataset.step as 'rotation' | 'artSize';
+        if (key === 'rotation' && it.settings.style !== 'rounded') return;
+        this.patchItem({ [key]: it.settings[key] + Number(b.dataset.delta) });
+      }),
+    );
+    $('resetItem').addEventListener('click', () => {
+      const it = this.item;
+      if (it) this.patchItem({ ...DEFAULT_ITEM, overlayCustom: it.settings.overlayCustom, exported: it.settings.exported });
+    });
     const color = $<HTMLInputElement>('overlayColor');
     color.addEventListener('input', () => this.patchItem({ overlayCustom: color.value.toUpperCase(), overlayMode: 'custom' }, true));
     color.addEventListener('change', () => this.patchItem({ overlayCustom: color.value.toUpperCase(), overlayMode: 'custom' }));
@@ -115,6 +130,19 @@ export class Controls {
     document.querySelectorAll<HTMLButtonElement>('[data-bg]').forEach((b) =>
       b.addEventListener('click', () => s.updateGlobals({ bg: b.dataset.bg as PreviewBg })),
     );
+    const presets = $('presets');
+    for (const p of LOOK_PRESETS) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mode preset';
+      b.dataset.preset = p.id;
+      b.title = p.hint;
+      b.textContent = p.name;
+      b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', () => s.updateGlobals(p.values));
+      presets.append(b);
+    }
+    $('resetLook').addEventListener('click', () => s.updateGlobals(LOOK_PRESETS[0]!.values));
     $<HTMLSelectElement>('resolution').addEventListener('change', (e) =>
       s.updateGlobals({ resolution: Number((e.target as HTMLSelectElement).value) }),
     );
@@ -124,7 +152,7 @@ export class Controls {
   syncItem(): void {
     const it = this.item;
     const disabled = !it;
-    for (const id of ['artSize', 'zoom', 'offsetX', 'offsetY', 'overlayMode', 'overlayColor', 'acrylicHole', 'applyAll', 'resetCrop'])
+    for (const id of ['artSize', 'zoom', 'offsetX', 'offsetY', 'overlayColor', 'acrylicHole', 'applyAll', 'resetCrop', 'resetItem'])
       ($(id) as HTMLInputElement).disabled = disabled;
     document.querySelectorAll<HTMLButtonElement>('[data-style],[data-fit]').forEach((b) => (b.disabled = disabled));
     if (!it) return;
@@ -161,9 +189,15 @@ export class Controls {
     ($('radius') as HTMLInputElement).disabled = st.style !== 'rounded';
     $('styleHint').textContent = STYLE_HINTS[st.style];
     const hex = rgbToHex(overlayTint(st, it.colors));
-    $<HTMLSelectElement>('overlayMode').value = st.overlayMode;
+    document.querySelectorAll<HTMLElement>('[data-overlay]').forEach((b) => {
+      const on = b.dataset.overlay === st.overlayMode;
+      b.classList.toggle('active', on);
+      if (b.tagName === 'BUTTON') b.setAttribute('aria-checked', String(on));
+    });
+    $('autoDot').style.background = rgbToHex(automaticTint(it.colors));
     $<HTMLInputElement>('overlayColor').value = hex.toLowerCase();
     $('overlayHex').textContent = hex;
+    document.querySelectorAll<HTMLButtonElement>('button[data-step="rotation"]').forEach((b) => (b.disabled = st.style !== 'rounded'));
     this.syncPanHint(it);
   }
 
@@ -204,6 +238,12 @@ export class Controls {
     $('previewBg').className = 'preview-bg ' + g.bg;
     $('markLogoName').textContent = this.store.markName || '尚未选择图片';
     for (const id of ['bevel', 'depth', 'shadow']) ($(id) as HTMLInputElement).disabled = !g.threeDEnabled;
+    const active = matchPreset(g);
+    document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((b) => {
+      const on = b.dataset.preset === active;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
   }
 }
 

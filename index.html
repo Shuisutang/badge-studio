@@ -34,134 +34,160 @@
           <input id="files" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple />
         </section>
 
-        <div class="settings">
-          <details class="panel" open id="p-style">
-            <summary><h2>02 / 款式与构图 <small>每张图片独立设置</small></h2></summary>
-            <div class="label" id="styleLabel">样机款式</div>
-            <div class="style-switch" role="group" aria-labelledby="styleLabel">
-              <button class="style-option active" data-style="rounded" type="button" aria-pressed="true">圆角方吧唧</button>
-              <button class="style-option" data-style="square" type="button" aria-pressed="false">直角方吧唧</button>
-              <button class="style-option" data-style="acrylic" type="button" aria-pressed="false">亚克力方牌</button>
+        <div class="settings" id="settings">
+          <div class="sheet-bar">
+            <button type="button" class="sheet-handle" id="sheetToggle" aria-expanded="true" aria-controls="settings">
+              <span class="grip" aria-hidden="true"></span><span class="sr-only">展开/收起设置</span>
+            </button>
+            <div class="tabs" role="tablist" aria-label="设置分组">
+              <button type="button" role="tab" class="tab active" data-tab="style" aria-selected="true" aria-controls="p-style" id="tab-style">款式</button>
+              <button type="button" role="tab" class="tab" data-tab="color" aria-selected="false" aria-controls="p-color" id="tab-color">叠色</button>
+              <button type="button" role="tab" class="tab" data-tab="advanced" aria-selected="false" aria-controls="p-advanced" id="tab-advanced">高级</button>
+            </div>
+          </div>
+
+          <section class="panel tab-panel active" id="p-style" role="tabpanel" aria-labelledby="tab-style" data-panel="style">
+            <h2>02 / 款式 <small>每张图片独立</small></h2>
+            <div class="style-switch" role="group" aria-label="样机款式">
+              <button class="style-option active" data-style="rounded" type="button" aria-pressed="true"><span class="ico ico-rounded" aria-hidden="true"></span>圆角吧唧</button>
+              <button class="style-option" data-style="square" type="button" aria-pressed="false"><span class="ico ico-square" aria-hidden="true"></span>直角吧唧</button>
+              <button class="style-option" data-style="acrylic" type="button" aria-pressed="false"><span class="ico ico-acrylic" aria-hidden="true"></span>亚克力牌</button>
             </div>
             <p id="styleHint" class="note">圆角塑封：顶部细长高光，底部柔雾投影。</p>
             <div id="rotationControl" class="drag-guard" draggable="false">
               <div class="label"><label for="rotation">主图旋转</label> <output id="rotation-v" for="rotation">0°</output></div>
-              <input id="rotation" type="range" min="-30" max="30" value="0" step="1" draggable="false" />
+              <div class="stepper">
+                <button type="button" class="step" data-step="rotation" data-delta="-1" aria-label="旋转 -1°">−</button>
+                <input id="rotation" type="range" min="-30" max="30" value="0" step="1" draggable="false" />
+                <button type="button" class="step" data-step="rotation" data-delta="1" aria-label="旋转 +1°">＋</button>
+              </div>
               <div class="inline-row" id="rotationRow">
                 <span class="muted-small" id="rotationNote">只旋转中间主图，外圈仍保持水平</span>
                 <button type="button" class="inline-link" id="resetRotation">归零</button>
               </div>
             </div>
             <div class="label"><label for="artSize">主图尺寸</label> <output id="artSize-v">100%</output></div>
-            <input id="artSize" type="range" min="65" max="110" value="100" step="1" data-item="artSize" data-unit="%" />
-            <label class="checkline" id="acrylicHoleRow" hidden><input id="acrylicHole" type="checkbox" checked /> 亚克力左下角透明圆孔</label>
+            <div class="stepper">
+              <button type="button" class="step" data-step="artSize" data-delta="-1" aria-label="主图缩小 1%">−</button>
+              <input id="artSize" type="range" min="65" max="110" value="100" step="1" data-item="artSize" data-unit="%" />
+              <button type="button" class="step" data-step="artSize" data-delta="1" aria-label="主图放大 1%">＋</button>
+            </div>
+            <label class="checkline" id="acrylicHoleRow" hidden><input id="acrylicHole" type="checkbox" checked /> 左下角透明圆孔</label>
+            <div class="row-actions">
+              <button type="button" class="btn small" id="resetItem">还原这张</button>
+              <button type="button" class="btn small" id="applyAll">应用到全部图片</button>
+            </div>
+          </section>
 
-            <div class="divider-line"></div>
-            <div class="label" id="fitLabel">插画填充方式</div>
-            <div class="toggle-row" role="group" aria-labelledby="fitLabel">
-              <button class="mode active" data-fit="cover" type="button" aria-pressed="true">铺满裁切</button>
-              <button class="mode" data-fit="contain" type="button" aria-pressed="false">完整显示</button>
+          <section class="panel tab-panel" id="p-color" role="tabpanel" aria-labelledby="tab-color" data-panel="color">
+            <h2>03 / 外圈叠色 <output id="overlayHex">#C9D8EA</output></h2>
+            <div class="swatches" role="radiogroup" aria-label="外圈叠色">
+              <button type="button" class="swatch active" role="radio" aria-checked="true" data-overlay="auto"><span class="dot" id="autoDot"></span>自动</button>
+              <button type="button" class="swatch" role="radio" aria-checked="false" data-overlay="white"><span class="dot" style="background:#fff"></span>白色</button>
+              <button type="button" class="swatch" role="radio" aria-checked="false" data-overlay="black"><span class="dot" style="background:#000"></span>黑色</button>
+              <label class="swatch" data-overlay="custom" id="customSwatch"><input id="overlayColor" type="color" value="#c9d8ea" aria-label="自定义叠色" /><span>自定义</span></label>
             </div>
-            <div class="label"><label for="zoom">中心主图缩放</label> <output id="zoom-v">100%</output></div>
-            <input id="zoom" type="range" min="75" max="180" value="100" data-item="zoom" data-unit="%" />
-            <div class="splits">
-              <div>
-                <div class="label"><label for="offsetX">水平位置</label> <output id="offsetX-v">0</output></div>
-                <input id="offsetX" type="range" min="-100" max="100" value="0" data-item="offsetX" />
-              </div>
-              <div>
-                <div class="label"><label for="offsetY">垂直位置</label> <output id="offsetY-v">0</output></div>
-                <input id="offsetY" type="range" min="-100" max="100" value="0" data-item="offsetY" />
-              </div>
-            </div>
-            <div class="inline-row">
-              <span class="muted-small" id="panHint">裁切和位置只影响当前图片</span>
-              <button type="button" class="inline-link" id="resetCrop">重置裁切</button>
-            </div>
-
-            <div class="divider-line"></div>
-            <div class="label"><label for="overlayMode">外圈叠色</label> <output id="overlayHex">#C9D8EA</output></div>
-            <div class="splits">
-              <select id="overlayMode">
-                <option value="auto">自动取主色</option>
-                <option value="custom">自定义颜色</option>
-                <option value="white">白色叠层</option>
-                <option value="black">黑色叠层</option>
-              </select>
-              <input id="overlayColor" type="color" value="#c9d8ea" aria-label="叠色颜色" />
-            </div>
-            <p class="note">每张图自动取自己的主色；手动改色只影响当前图片。</p>
-            <button type="button" class="btn wide" id="applyAll">把当前款式和构图应用到全部图片</button>
-          </details>
-
-          <details class="panel" open id="p-look">
-            <summary><h2>03 / 外观与材质 <small>所有图片共用</small></h2></summary>
-            <div class="label"><label for="radius">圆角半径</label> <output id="radius-v">84</output></div>
-            <input id="radius" type="range" min="24" max="150" value="84" data-global="radius" />
-            <div class="label"><label for="ring">内图边距</label> <output id="ring-v">44</output></div>
-            <input id="ring" type="range" min="6" max="120" value="44" data-global="ring" />
-            <div class="label"><label for="outerZoom">外层图案缩放</label> <output id="outerZoom-v">104%</output></div>
-            <input id="outerZoom" type="range" min="90" max="140" value="104" data-global="outerZoom" data-unit="%" />
-            <div class="label"><label for="overlayAlpha">叠色透明度</label> <output id="overlayAlpha-v">45%</output></div>
+            <div class="label"><label for="overlayAlpha">叠色浓度</label> <output id="overlayAlpha-v">45%</output></div>
             <input id="overlayAlpha" type="range" min="0" max="100" value="45" data-global="overlayAlpha" data-unit="%" />
-            <div class="label"><label for="gloss">表面高光</label> <output id="gloss-v">10%</output></div>
-            <input id="gloss" type="range" min="0" max="60" value="10" data-global="gloss" data-unit="%" />
-            <div class="divider-line"></div>
-            <label class="checkline"><input id="threeDEnabled" type="checkbox" checked />启用柔和立体效果</label>
-            <div class="label"><label for="bevel">弧面强度</label> <output id="bevel-v">30%</output></div>
-            <input id="bevel" type="range" min="0" max="100" value="30" data-global="bevel" data-unit="%" />
-            <div class="label"><label for="depth">柔和边缘厚度</label> <output id="depth-v">11</output></div>
-            <input id="depth" type="range" min="0" max="28" value="11" data-global="depth" />
-            <div class="label"><label for="shadow">柔和投影</label> <output id="shadow-v">38%</output></div>
-            <input id="shadow" type="range" min="0" max="100" value="38" data-global="shadow" data-unit="%" />
-            <p class="note">圆角/直角吧唧是柔雾塑封；亚克力款另有浅色透明层、透光边缘和打孔。</p>
-          </details>
+            <p class="note">每张图自动取自己的主色；手动改色只影响当前图片。叠色浓度是所有图片共用的。</p>
+          </section>
 
-          <details class="panel" open id="p-mark">
-            <summary><h2>04 / 右下角版权标 <small>文字或图片 Logo</small></h2></summary>
-            <label class="checkline"><input id="copyrightEnabled" type="checkbox" />显示版权标</label>
-            <div class="label"><label for="markMode">版权标类型</label></div>
-            <select id="markMode">
-              <option value="text">文字</option>
-              <option value="logo">上传透明 PNG Logo</option>
-            </select>
-            <div id="markTextSettings">
-              <div class="label"><label for="markText">版权文字</label></div>
-              <input id="markText" class="text-field" type="text" value="© YOUR BRAND" maxlength="90" placeholder="如 © 2026 ABC" />
-              <div class="label"><label for="markSize">文字大小</label> <output id="markSize-v">19</output></div>
-              <input id="markSize" type="range" min="10" max="38" value="19" data-global="markSize" />
-              <div class="label"><label for="markColorMode">文字颜色</label></div>
+          <section class="panel tab-panel" id="p-advanced" role="tabpanel" aria-labelledby="tab-advanced" data-panel="advanced">
+            <h2>04 / 高级 <small>一般不用动</small></h2>
+            <div class="label">外观预设 <small class="muted-small">所有图片共用</small></div>
+            <div class="presets" role="group" aria-label="外观预设" id="presets"></div>
+
+            <details class="sub" id="d-crop">
+              <summary>裁切与位置 <small>当前图片</small></summary>
+              <div class="label" id="fitLabel">插画填充方式</div>
+              <div class="toggle-row" role="group" aria-labelledby="fitLabel">
+                <button class="mode active" data-fit="cover" type="button" aria-pressed="true">铺满裁切</button>
+                <button class="mode" data-fit="contain" type="button" aria-pressed="false">完整显示</button>
+              </div>
+              <div class="label"><label for="zoom">中心主图缩放</label> <output id="zoom-v">100%</output></div>
+              <input id="zoom" type="range" min="75" max="180" value="100" data-item="zoom" data-unit="%" />
               <div class="splits">
-                <select id="markColorMode">
-                  <option value="white">白色</option>
-                  <option value="black">黑色</option>
-                  <option value="custom">自定义</option>
-                </select>
-                <input id="markColor" type="color" value="#ffffff" aria-label="自定义文字颜色" />
+                <div>
+                  <div class="label"><label for="offsetX">水平位置</label> <output id="offsetX-v">0</output></div>
+                  <input id="offsetX" type="range" min="-100" max="100" value="0" data-item="offsetX" />
+                </div>
+                <div>
+                  <div class="label"><label for="offsetY">垂直位置</label> <output id="offsetY-v">0</output></div>
+                  <input id="offsetY" type="range" min="-100" max="100" value="0" data-item="offsetY" />
+                </div>
               </div>
-            </div>
-            <div id="markLogoSettings" hidden>
-              <div class="label">选择 Logo 文件</div>
-              <label class="file-pick" for="markLogo">＋ 上传 PNG / WebP 图片</label>
-              <input id="markLogo" type="file" accept="image/png,image/webp,image/jpeg" hidden />
-              <div class="hint-line"><span id="markLogoName">尚未选择图片</span><button id="clearMarkLogo" type="button" class="inline-link">移除</button></div>
-              <div class="label"><label for="markLogoWidth">Logo 宽度</label> <output id="markLogoWidth-v">100</output></div>
-              <input id="markLogoWidth" type="range" min="25" max="200" value="100" data-global="markLogoWidth" />
-            </div>
-            <div class="label"><label for="markOpacity">版权标不透明度</label> <output id="markOpacity-v">90%</output></div>
-            <input id="markOpacity" type="range" min="0" max="100" value="90" data-global="markOpacity" data-unit="%" />
-            <div class="splits">
-              <div>
-                <div class="label"><label for="markRight">右侧留距</label> <output id="markRight-v">54</output></div>
-                <input id="markRight" type="range" min="8" max="170" value="54" data-global="markRight" />
+              <div class="inline-row">
+                <span class="muted-small" id="panHint">裁切和位置只影响当前图片</span>
+                <button type="button" class="inline-link" id="resetCrop">重置裁切</button>
               </div>
-              <div>
-                <div class="label"><label for="markBottom">下方留距</label> <output id="markBottom-v">18</output></div>
-                <input id="markBottom" type="range" min="8" max="150" value="18" data-global="markBottom" />
+            </details>
+
+            <details class="sub" id="d-look">
+              <summary>外观与材质 <small>所有图片</small></summary>
+              <div class="label"><label for="radius">圆角半径</label> <output id="radius-v">84</output></div>
+              <input id="radius" type="range" min="24" max="150" value="84" data-global="radius" />
+              <div class="label"><label for="ring">外圈宽度</label> <output id="ring-v">44</output></div>
+              <input id="ring" type="range" min="6" max="120" value="44" data-global="ring" />
+              <div class="label"><label for="outerZoom">外圈图案缩放</label> <output id="outerZoom-v">104%</output></div>
+              <input id="outerZoom" type="range" min="90" max="140" value="104" data-global="outerZoom" data-unit="%" />
+              <div class="label"><label for="gloss">表面高光</label> <output id="gloss-v">10%</output></div>
+              <input id="gloss" type="range" min="0" max="60" value="10" data-global="gloss" data-unit="%" />
+              <label class="checkline"><input id="threeDEnabled" type="checkbox" checked />柔和立体效果</label>
+              <div class="label"><label for="bevel">弧面强度</label> <output id="bevel-v">30%</output></div>
+              <input id="bevel" type="range" min="0" max="100" value="30" data-global="bevel" data-unit="%" />
+              <div class="label"><label for="depth">边缘厚度</label> <output id="depth-v">11</output></div>
+              <input id="depth" type="range" min="0" max="28" value="11" data-global="depth" />
+              <div class="label"><label for="shadow">柔和投影</label> <output id="shadow-v">38%</output></div>
+              <input id="shadow" type="range" min="0" max="100" value="38" data-global="shadow" data-unit="%" />
+              <button type="button" class="btn small wide" id="resetLook">恢复默认外观</button>
+            </details>
+
+            <details class="sub" id="d-mark">
+              <summary>右下角版权标 <small>所有图片</small></summary>
+              <label class="checkline"><input id="copyrightEnabled" type="checkbox" />显示版权标</label>
+              <div class="label"><label for="markMode">版权标类型</label></div>
+              <select id="markMode">
+                <option value="text">文字</option>
+                <option value="logo">上传透明 PNG Logo</option>
+              </select>
+              <div id="markTextSettings">
+                <div class="label"><label for="markText">版权文字</label></div>
+                <input id="markText" class="text-field" type="text" value="© YOUR BRAND" maxlength="90" placeholder="如 © 2026 ABC" />
+                <div class="label"><label for="markSize">文字大小</label> <output id="markSize-v">19</output></div>
+                <input id="markSize" type="range" min="10" max="38" value="19" data-global="markSize" />
+                <div class="label"><label for="markColorMode">文字颜色</label></div>
+                <div class="splits">
+                  <select id="markColorMode">
+                    <option value="white">白色</option>
+                    <option value="black">黑色</option>
+                    <option value="custom">自定义</option>
+                  </select>
+                  <input id="markColor" type="color" value="#ffffff" aria-label="自定义文字颜色" />
+                </div>
               </div>
-            </div>
-            <p class="note">只填写你有权使用的版权文字或品牌标识。</p>
-          </details>
+              <div id="markLogoSettings" hidden>
+                <div class="label">选择 Logo 文件</div>
+                <label class="file-pick" for="markLogo">＋ 上传 PNG / WebP 图片</label>
+                <input id="markLogo" type="file" accept="image/png,image/webp,image/jpeg" hidden />
+                <div class="hint-line"><span id="markLogoName">尚未选择图片</span><button id="clearMarkLogo" type="button" class="inline-link">移除</button></div>
+                <div class="label"><label for="markLogoWidth">Logo 宽度</label> <output id="markLogoWidth-v">100</output></div>
+                <input id="markLogoWidth" type="range" min="25" max="200" value="100" data-global="markLogoWidth" />
+              </div>
+              <div class="label"><label for="markOpacity">不透明度</label> <output id="markOpacity-v">90%</output></div>
+              <input id="markOpacity" type="range" min="0" max="100" value="90" data-global="markOpacity" data-unit="%" />
+              <div class="splits">
+                <div>
+                  <div class="label"><label for="markRight">右侧留距</label> <output id="markRight-v">54</output></div>
+                  <input id="markRight" type="range" min="8" max="170" value="54" data-global="markRight" />
+                </div>
+                <div>
+                  <div class="label"><label for="markBottom">下方留距</label> <output id="markBottom-v">18</output></div>
+                  <input id="markBottom" type="range" min="8" max="150" value="18" data-global="markBottom" />
+                </div>
+              </div>
+              <p class="note">只填写你有权使用的版权文字或品牌标识。</p>
+            </details>
+          </section>
         </div>
       </aside>
 
@@ -188,9 +214,10 @@
             <div id="busy" class="busy" hidden><span class="spinner" aria-hidden="true"></span><span id="busyText">处理中…</span></div>
           </div>
           <div class="preview-actions">
-            <button id="download" class="btn primary" type="button">↓ 导出透明 PNG</button>
+            <button id="download" class="btn primary" type="button">↓ 导出这张 PNG</button>
             <button id="sheet" class="btn" type="button">▦ 导出展示拼图</button>
             <button id="zipAll" class="btn" type="button">⇩ 全部打包 zip</button>
+            <button id="deleteCurrent" class="btn danger" type="button">删除这张</button>
             <span class="spacer"></span>
             <label class="sr-only" for="resolution">导出分辨率</label>
             <select class="mini-select" id="resolution" title="导出分辨率">
@@ -203,15 +230,16 @@
 
         <section class="panel gallery" aria-labelledby="h-gallery">
           <div class="gallery-head">
-            <h2 id="h-gallery">05 / 徽章陈列 <span class="count" id="count">1 个</span></h2>
+            <h2 id="h-gallery">05 / 陈列与导出列表 <span class="count" id="count">1 个</span></h2>
             <div class="gallery-tools">
               <button type="button" class="btn small" id="moveLeft" aria-label="当前图片前移">← 前移</button>
               <button type="button" class="btn small" id="moveRight" aria-label="当前图片后移">后移 →</button>
-              <button type="button" class="btn small danger" id="clearAll">清空</button>
+              <button type="button" class="btn small" id="toggleAllExport">全部移出拼图</button>
+              <button type="button" class="btn small danger" id="clearAll">清空全部</button>
             </div>
           </div>
           <div id="galleryGrid" class="gallery-grid" role="listbox" aria-label="徽章列表" tabindex="0"></div>
-          <p class="note">方向键切换图片，Delete 删除。单张导出是透明底，展示拼图是白底。</p>
+          <p class="note">勾选「拼图」的图片会进入展示拼图和 zip。方向键切换，Delete 删除，Alt + 方向键调整顺序。</p>
         </section>
       </section>
     </main>

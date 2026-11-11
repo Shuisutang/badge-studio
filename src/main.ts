@@ -12,6 +12,7 @@ import { Controls } from './ui/controls';
 import { demoArtwork } from './ui/demo';
 import { $, setBusy, toast } from './ui/dom';
 import { Gallery } from './ui/gallery';
+import { initSettingsSheet } from './ui/sheet';
 
 const store = new Store();
 const controls = new Controls(store);
@@ -50,7 +51,10 @@ function syncHeader(): void {
   const isLow = !!it && !it.isDemo && isLowRes(it.naturalWidth, it.naturalHeight, res);
   low.hidden = !isLow;
   if (isLow) low.textContent = `⚠ 原图较小，导出 ${res}px 可能偏糊`;
-  for (const id of ['download', 'sheet', 'zipAll', 'moveLeft', 'moveRight', 'clearAll', 'prevItem', 'nextItem'])
+  const inSheet = store.exportItems.length;
+  $('toggleAllExport').textContent = n && inSheet === n ? '全部移出拼图' : '全部加入拼图';
+  $('sheet').textContent = `▦ 导出展示拼图${n > 1 ? `（${inSheet}）` : ''}`;
+  for (const id of ['download', 'sheet', 'zipAll', 'moveLeft', 'moveRight', 'clearAll', 'prevItem', 'nextItem', 'deleteCurrent', 'toggleAllExport'])
     ($(id) as HTMLButtonElement).disabled = !it;
   ($('prevItem') as HTMLButtonElement).disabled = n < 2;
   ($('nextItem') as HTMLButtonElement).disabled = n < 2;
@@ -65,7 +69,10 @@ store.subscribe((c: Change) => {
         if (!c.live) controls.syncItem();
         schedulePreview();
       }
-      if (!c.live) gallery.schedule();
+      if (!c.live) {
+        gallery.schedule();
+        syncHeader();
+      }
       break;
     case 'globals':
       gallery.setBackground(store.globals.bg);
@@ -251,12 +258,21 @@ $('download').addEventListener('click', () => {
   const it = store.selected;
   if (it) void busy(`正在导出 ${store.globals.resolution}px…`, () => exportSingle(it, store.globals, store.mark));
 });
+function exportList(): BadgeItem[] | null {
+  const items = store.exportItems;
+  if (!items.length) {
+    toast('拼图列表是空的：在陈列里勾选「拼图」');
+    return null;
+  }
+  return items;
+}
 $('sheet').addEventListener('click', () => {
-  if (store.items.length) void busy('正在生成展示拼图…', () => exportSheet(store.items, store.globals, store.mark));
+  const items = exportList();
+  if (items) void busy('正在生成展示拼图…', () => exportSheet(items, store.globals, store.mark));
 });
 $('zipAll').addEventListener('click', () => {
-  const items = store.items.slice();
-  if (!items.length) return;
+  const items = exportList();
+  if (!items) return;
   void busy('正在打包…', async () => {
     const blob = await exportZip(items, store.globals, store.mark, (d, t) => setBusy(`正在打包 ${Math.min(d + 1, t)} / ${t}…`));
     download(blob, ZIP_NAME);
@@ -272,6 +288,11 @@ $('prevItem').addEventListener('click', () => store.selectOffset(-1));
 $('nextItem').addEventListener('click', () => store.selectOffset(1));
 $('moveLeft').addEventListener('click', () => store.selected && store.move(store.selected.id, -1));
 $('moveRight').addEventListener('click', () => store.selected && store.move(store.selected.id, 1));
+$('deleteCurrent').addEventListener('click', () => store.selected && removeItem(store.selected.id));
+$('toggleAllExport').addEventListener('click', () => {
+  const allIn = store.items.every((i) => i.settings.exported);
+  store.setAllExported(!allIn);
+});
 $('clearAll').addEventListener('click', () => {
   const real = store.items.filter((i) => !i.isDemo).length;
   if (real && !confirm(`清空全部 ${real} 张图片？本机自动保存的内容也会一起删除。`)) return;
@@ -360,8 +381,7 @@ async function restore(): Promise<void> {
   if (!store.items.length) addDemo();
 }
 
-// Narrow screens: start with the long panels folded.
-if (matchMedia('(max-width: 760px)').matches) for (const id of ['p-look', 'p-mark']) $<HTMLDetailsElement>(id).open = false;
+initSettingsSheet();
 
 controls.syncGlobals();
 syncHeader();

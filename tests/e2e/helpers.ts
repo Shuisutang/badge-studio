@@ -7,9 +7,15 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export const IMG = (name: string) => path.join(here, '..', 'fixtures', 'images', name);
 export const LEGACY = path.join(here, '..', 'fixtures', 'legacy-v16.html');
 
-export async function openApp(page: Page): Promise<void> {
+/** Opens the app. `advanced` unfolds the collapsed 高级 sections so tests can click into them. */
+export async function openApp(page: Page, advanced = true): Promise<void> {
   await page.goto('./');
   await page.waitForSelector('html[data-ready="1"]');
+  if (advanced) await openAdvanced(page);
+}
+
+export async function openAdvanced(page: Page): Promise<void> {
+  await page.evaluate(() => document.querySelectorAll('details.sub').forEach((d) => ((d as HTMLDetailsElement).open = true)));
 }
 
 export async function upload(page: Page, names: string[]): Promise<void> {

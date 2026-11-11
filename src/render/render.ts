@@ -11,6 +11,15 @@
 import { css, overlayTint } from '../color/color';
 import type { ColorSamples, Drawable, GlobalSettings, ItemSettings } from '../model/types';
 import { ACRYLIC_FACE, ACRYLIC_HOLE, BADGE_FACE, DESIGN, artPanelGeometry, fitRect, type Rect } from './geometry';
+import {
+  acrylicBackSheet,
+  acrylicGroundShadow,
+  acrylicRimLight,
+  acrylicThickness,
+  badgeContactShadow,
+  badgeFaceLighting,
+  badgeGloss,
+} from './lighting';
 import { roundedSubpath, rr } from './paths';
 
 export interface RenderInput {
@@ -142,31 +151,10 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   const gloss = g.gloss / 100;
   const rim = 19;
   const b = g.threeDEnabled ? g.bevel / 100 : 0;
-  const thickness = g.threeDEnabled ? Math.max(4, g.depth * 0.48) : 0;
+  const thickness = acrylicThickness(g.threeDEnabled, g.depth);
 
-  if (sh > 0) {
-    ctx.save();
-    ctx.translate(x + w / 2, y + h + thickness + 8);
-    ctx.scale(1, 0.13);
-    const shadow = ctx.createRadialGradient(0, 0, 1, 0, 0, w * 0.5);
-    shadow.addColorStop(0, `rgba(42,56,72,${0.05 + 0.09 * sh})`);
-    shadow.addColorStop(0.56, `rgba(42,56,72,${0.025 + 0.035 * sh})`);
-    shadow.addColorStop(1, 'rgba(42,56,72,0)');
-    ctx.fillStyle = shadow;
-    ctx.beginPath();
-    ctx.arc(0, 0, w * 0.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-  if (thickness > 0) {
-    ctx.save();
-    ctx.shadowColor = 'rgba(75,102,130,.13)';
-    ctx.shadowBlur = 9;
-    ctx.fillStyle = 'rgba(135,165,190,.18)';
-    rr(ctx, x + 2, y + thickness, w, h, r);
-    ctx.fill();
-    ctx.restore();
-  }
+  acrylicGroundShadow(ctx, ACRYLIC_FACE, sh, thickness);
+  acrylicBackSheet(ctx, ACRYLIC_FACE, r, thickness);
 
   ctx.save();
   rr(ctx, x, y, w, h, r);
@@ -194,36 +182,7 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   drawArtPanel(ctx, input, { x: x + rim, y: y + rim, w: w - rim * 2, h: h - rim * 2 }, 0, { noShade: true, outerLimit: w - 8 });
   ctx.restore();
 
-  ctx.strokeStyle = `rgba(250,255,255,${0.53 + 0.3 * b})`;
-  ctx.lineWidth = 5;
-  rr(ctx, x + 4, y + 4, w - 8, h - 8, 2);
-  ctx.stroke();
-  ctx.strokeStyle = 'rgba(100,154,183,.40)';
-  ctx.lineWidth = 2;
-  rr(ctx, x + 2, y + 2, w - 4, h - 4, 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(x + 36, y + 9);
-  ctx.lineTo(x + w - 40, y + 9);
-  ctx.strokeStyle = 'rgba(255,255,255,.85)';
-  ctx.lineWidth = 4.6;
-  ctx.lineCap = 'round';
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(x + 8, y + 32);
-  ctx.lineTo(x + 8, y + h - 35);
-  ctx.strokeStyle = 'rgba(255,255,255,.37)';
-  ctx.lineWidth = 3;
-  ctx.stroke();
-
-  if (gloss > 0) {
-    const shine = ctx.createLinearGradient(x, y, x + w * 0.57, y + h * 0.56);
-    shine.addColorStop(0, `rgba(255,255,255,${0.36 * gloss})`);
-    shine.addColorStop(0.3, `rgba(255,255,255,${0.07 * gloss})`);
-    shine.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = shine;
-    ctx.fillRect(x, y, w, h);
-  }
+  acrylicRimLight(ctx, ACRYLIC_FACE, b, gloss);
   ctx.restore();
 
   drawCopyright(ctx, input, x, y, w, h, r);
@@ -277,25 +236,7 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
   const sh = has3d ? g.shadow / 100 : 0;
 
   // Elliptical, translucent contact shadow fading to alpha 0: no slab, no dark line.
-  if (sh > 0) {
-    const cx = x + w * 0.5;
-    const cy = y + h + 3 + depth * 0.2;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.scale(1, 0.115 + 0.045 * sh);
-    const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.48);
-    glow.addColorStop(0, `rgba(42,55,72,${0.055 + 0.12 * sh})`);
-    glow.addColorStop(0.38, `rgba(42,55,72,${0.04 + 0.07 * sh})`);
-    glow.addColorStop(0.72, `rgba(42,55,72,${0.012 + 0.028 * sh})`);
-    glow.addColorStop(1, 'rgba(42,55,72,0)');
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(0, 0, w * 0.48, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  const rotated = s.style === 'rounded' && Math.abs(s.rotation || 0) > 0.01;
+  badgeContactShadow(ctx, BADGE_FACE, sh, depth);
 
   // Base printed layer always fills the whole badge face.
   ctx.save();
@@ -314,13 +255,18 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
   ctx.fillRect(x, y, w, h);
   ctx.restore();
 
-  // Outer-ring tint; the clear area rotates with a tilted centre panel.
+  // Outer-ring tint. The clear window always follows the real centre panel
+  // (rotation AND size), and is clipped to the face first.
+  // Fix (coupling): v16 used the un-resized inner rect unless rotated, so at
+  // size ≠ 100% an untinted halo appeared around the panel; and with a tilted
+  // panel > 100% the even-odd path painted tint outside the rounded corners.
   if (g.overlayAlpha > 0) {
     ctx.save();
+    rr(ctx, x, y, w, h, r);
+    ctx.clip();
     ctx.beginPath();
     roundedSubpath(ctx, x, y, w, h, r);
-    if (rotated) panelSubpath(ctx, s, inner, innerR, w);
-    else roundedSubpath(ctx, inner.x, inner.y, inner.w, inner.h, innerR);
+    panelSubpath(ctx, s, inner, innerR, w);
     ctx.clip('evenodd');
     ctx.fillStyle = css(tint, g.overlayAlpha / 100);
     ctx.fillRect(x, y, w, h);
@@ -339,91 +285,8 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
   drawArtPanel(ctx, input, inner, innerR, { outerLimit: w });
   ctx.restore();
 
-  if (has3d && b > 0) {
-    ctx.save();
-    rr(ctx, x, y, w, h, r);
-    ctx.clip();
-
-    // Narrow top specular strip.
-    ctx.save();
-    ctx.filter = 'blur(0.6px)';
-    ctx.beginPath();
-    ctx.moveTo(x + r * 0.64, y + 8);
-    ctx.lineTo(x + w - r * 0.66, y + 8);
-    ctx.strokeStyle = `rgba(255,255,255,${0.42 + 0.3 * b})`;
-    ctx.lineWidth = 4.2;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-    ctx.restore();
-
-    const topBand = ctx.createLinearGradient(0, y + 8, 0, y + 44);
-    topBand.addColorStop(0, `rgba(255,255,255,${0.2 + 0.18 * b})`);
-    topBand.addColorStop(0.5, `rgba(255,255,255,${0.08 + 0.07 * b})`);
-    topBand.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = topBand;
-    ctx.fillRect(x + 20, y + 8, w - 40, 38);
-
-    const left = ctx.createLinearGradient(x, 0, x + 74, 0);
-    left.addColorStop(0, `rgba(255,255,255,${0.22 + 0.16 * b})`);
-    left.addColorStop(0.5, `rgba(255,255,255,${0.09 + 0.07 * b})`);
-    left.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = left;
-    ctx.fillRect(x, y, 74, h);
-    const right = ctx.createLinearGradient(x + w - 90, 0, x + w, 0);
-    right.addColorStop(0, 'rgba(18,28,42,0)');
-    right.addColorStop(0.7, `rgba(25,36,52,${0.05 + 0.06 * b})`);
-    right.addColorStop(1, `rgba(18,26,40,${0.16 + 0.14 * b})`);
-    ctx.fillStyle = right;
-    ctx.fillRect(x + w - 90, y, 90, h);
-
-    const bottomInner = ctx.createLinearGradient(0, y + h - 118, 0, y + h);
-    bottomInner.addColorStop(0, 'rgba(14,20,31,0)');
-    bottomInner.addColorStop(1, `rgba(42,62,78,${0.055 + 0.055 * b})`);
-    ctx.fillStyle = bottomInner;
-    ctx.fillRect(x, y + h - 118, w, 118);
-
-    const dome = ctx.createRadialGradient(x + w * 0.24, y + h * 0.1, 44, x + w * 0.42, y + h * 0.34, w * 0.96);
-    dome.addColorStop(0, `rgba(255,255,255,${0.16 + 0.11 * b})`);
-    dome.addColorStop(0.45, `rgba(255,255,255,${0.045 + 0.02 * b})`);
-    dome.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = dome;
-    ctx.fillRect(x, y, w, h);
-
-    ctx.restore();
-
-    rr(ctx, x + 3, y + 3, w - 6, h - 6, Math.max(0, r - 3));
-    ctx.strokeStyle = `rgba(255,255,255,${0.28 + 0.34 * b})`;
-    ctx.lineWidth = 2.6;
-    ctx.stroke();
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(x - 20, y + h - 64, w + 40, 95);
-    ctx.clip();
-    ctx.filter = 'blur(5px)';
-    rr(ctx, x + 3, y + 3, w - 6, h - 6, Math.max(0, r - 3));
-    ctx.strokeStyle = `rgba(81,106,129,${0.055 + 0.07 * b})`;
-    ctx.lineWidth = 6;
-    ctx.stroke();
-    ctx.restore();
-    rr(ctx, x + 1, y + 1, w - 2, h - 2, Math.max(0, r - 1));
-    ctx.strokeStyle = `rgba(104,129,148,${0.075 + 0.065 * b})`;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-
-  if (g.gloss > 0) {
-    ctx.save();
-    rr(ctx, x, y, w, h, r);
-    ctx.clip();
-    ctx.globalAlpha = g.gloss / 100;
-    const gl = ctx.createRadialGradient(x + 170, y + 90, 25, x + 260, y + 240, 570);
-    gl.addColorStop(0, 'rgba(255,255,255,.34)');
-    gl.addColorStop(0.35, 'rgba(255,255,255,.07)');
-    gl.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = gl;
-    ctx.fillRect(x, y, w, h);
-    ctx.restore();
-  }
+  if (has3d && b > 0) badgeFaceLighting(ctx, BADGE_FACE, r, b);
+  badgeGloss(ctx, BADGE_FACE, r, g.gloss / 100);
 
   drawCopyright(ctx, input, x, y, w, h, r);
   ctx.restore();

@@ -27,7 +27,8 @@ const CASES: Case[] = [
   { name: 'photo-square', img: 'photo.webp', style: 'square' },
   { name: 'photo-acrylic', img: 'photo.webp', style: 'acrylic' },
   { name: 'square-rot-12', img: 'square.png', rotation: -12 },
-  { name: 'square-size80', img: 'square.png', artSize: 80 },
+  // artSize ≠ 100 is intentionally different now (tint window follows the panel), see coupling.spec.ts
+  { name: 'square-size110', img: 'square.png', artSize: 100, ranges: { ring: 20 } },
   { name: 'square-look', img: 'square.png', ranges: { gloss: 40, radius: 120, ring: 70, overlayAlpha: 70, bevel: 80, shadow: 90 } },
   { name: 'red-no3d', img: 'red.png', no3d: true },
   { name: 'blue-copyright', img: 'blue.png', copyright: true },

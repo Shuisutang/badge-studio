@@ -35,6 +35,7 @@ export const DEFAULT_ITEM: Readonly<ItemSettings> = Object.freeze({
   zoom: 100,
   offsetX: 0,
   offsetY: 0,
+  exported: true,
 });
 
 /** Numeric ranges, shared by the UI sliders and by sanitising restored/imported data. */
@@ -99,6 +100,7 @@ export function sanitizeItemSettings(raw: unknown): ItemSettings {
     zoom: num(r.zoom, d.zoom, RANGES.zoom),
     offsetX: num(r.offsetX, d.offsetX, RANGES.offsetX),
     offsetY: num(r.offsetY, d.offsetY, RANGES.offsetY),
+    exported: typeof r.exported === 'boolean' ? r.exported : d.exported,
   };
 }
 
@@ -133,6 +135,3 @@ export function sanitizeGlobals(raw: unknown): GlobalSettings {
 /** Per-image composition fields that "apply to all" copies. Offsets and colour stay per image. */
 export const SHARED_STYLE_KEYS = ['style', 'rotation', 'artSize', 'acrylicHole', 'fit', 'zoom'] as const satisfies readonly (keyof ItemSettings)[];
 
-export function pickFit(v: string): FitMode {
-  return v === 'contain' ? 'contain' : 'cover';
-}

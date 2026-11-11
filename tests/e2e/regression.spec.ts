@@ -13,7 +13,7 @@ test('red/green/blue get their own tint; editing one leaves the others alone', a
   const tints = await page.locator('.item-tint').allTextContents();
   expect(new Set(tints).size).toBe(3);
   await selectTile(page, 1);
-  await page.locator('#overlayMode').selectOption('black');
+  await page.locator('[data-overlay="black"]').click();
   await settle(page);
   await page.waitForTimeout(100);
   const after = await page.locator('.item-tint').allTextContents();
@@ -21,7 +21,7 @@ test('red/green/blue get their own tint; editing one leaves the others alone', a
   expect(after[2]).toBe(tints[2]);
   expect(after[1]).toBe('#000000');
   await selectTile(page, 0);
-  await expect(page.locator('#overlayMode')).toHaveValue('auto');
+  await expect(page.locator('[data-overlay].active')).toHaveAttribute('data-overlay', 'auto');
 });
 
 test('rotation -12° survives switching images', async ({ page }) => {

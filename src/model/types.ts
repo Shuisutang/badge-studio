@@ -24,6 +24,8 @@ export interface ItemSettings {
   /** -100 … 100, fraction of the available pan range in that axis. */
   offsetX: number;
   offsetY: number;
+  /** Included in the display sheet and the zip. */
+  exported: boolean;
 }
 
 /** Product-wide look settings shared by every badge (as in the v12 handoff). */

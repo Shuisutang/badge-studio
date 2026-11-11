@@ -1,4 +1,4 @@
-import { DEFAULT_GLOBALS, DEFAULT_ITEM, SHARED_STYLE_KEYS } from './defaults';
+import { DEFAULT_GLOBALS, DEFAULT_ITEM, SHARED_STYLE_KEYS, sanitizeGlobals, sanitizeItemSettings } from './defaults';
 import type { BadgeItem, Drawable, GlobalSettings, ItemSettings } from './types';
 
 export type Change =
@@ -96,7 +96,8 @@ export class Store {
   updateItem(id: string, patch: Partial<ItemSettings>, live = false): void {
     const it = this.items.find((i) => i.id === id);
     if (!it) return;
-    it.settings = { ...it.settings, ...patch };
+    // Clamp every write so no combination of controls can push geometry out of range.
+    it.settings = sanitizeItemSettings({ ...it.settings, ...patch });
     it.version++;
     this.emit({ kind: 'item', id, live });
   }
@@ -118,8 +119,22 @@ export class Store {
     return n;
   }
 
+  /** Include/exclude every item from the sheet and zip. */
+  setAllExported(on: boolean): void {
+    for (const it of this.items) {
+      if (it.settings.exported === on) continue;
+      it.settings = { ...it.settings, exported: on };
+      it.version++;
+    }
+    this.emit({ kind: 'list' });
+  }
+
+  get exportItems(): BadgeItem[] {
+    return this.items.filter((i) => i.settings.exported);
+  }
+
   updateGlobals(patch: Partial<GlobalSettings>, live = false): void {
-    this.globals = { ...this.globals, ...patch };
+    this.globals = sanitizeGlobals({ ...this.globals, ...patch });
     this.emit({ kind: 'globals', live });
   }
 

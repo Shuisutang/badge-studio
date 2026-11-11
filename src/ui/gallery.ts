@@ -10,6 +10,7 @@ const TILE_PX = 340;
 
 interface Tile {
   root: HTMLElement;
+  include: HTMLInputElement;
   main: HTMLButtonElement;
   art: HTMLElement;
   canvas: HTMLCanvasElement;
@@ -126,6 +127,8 @@ export class Gallery {
     const rot = it.settings.style === 'rounded' && it.settings.rotation ? ` · ${it.settings.rotation}°` : '';
     const low = !it.isDemo && isLowRes(it.naturalWidth, it.naturalHeight, this.store.globals.resolution);
     t.style.textContent = STYLE_TITLES[it.settings.style] + rot;
+    t.include.checked = it.settings.exported;
+    t.root.classList.toggle('excluded', !it.settings.exported);
     if (low) t.style.append(el('span', 'lowres-dot', ' · 低清'));
   }
 
@@ -154,15 +157,29 @@ export class Gallery {
       e.stopPropagation();
       this.onRemove(it.id);
     });
-    root.append(main, rm);
-    return { root, main, art, canvas, name, dot, hex, style, rendered: '' };
+    const incLabel = el('label', 'tile-include');
+    const include = el('input');
+    include.type = 'checkbox';
+    include.checked = it.settings.exported;
+    include.setAttribute('aria-label', `${it.name} 加入拼图和 zip`);
+    include.addEventListener('change', () => this.store.updateItem(it.id, { exported: include.checked }));
+    incLabel.append(include, document.createTextNode('拼图'));
+    root.append(main, rm, incLabel);
+    return { root, include, main, art, canvas, name, dot, hex, style, rendered: '' };
   }
 
   private onKey(e: KeyboardEvent): void {
     const s = this.store;
-    if ((e.target as HTMLElement).classList.contains('tile-remove')) return;
+    const tgt = e.target as HTMLElement;
+    if (tgt.classList.contains('tile-remove') || tgt.tagName === 'INPUT') return;
     const cols = Math.max(1, getComputedStyle(this.grid).gridTemplateColumns.split(' ').length);
     const map: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -cols, ArrowDown: cols };
+    if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && s.selected) {
+      e.preventDefault();
+      s.move(s.selected.id, e.key === 'ArrowLeft' ? -1 : 1);
+      requestAnimationFrame(() => this.focusSelected());
+      return;
+    }
     if (e.key in map) {
       e.preventDefault();
       const i = Math.max(0, Math.min(s.items.length - 1, s.selectedIndex + map[e.key]!));
