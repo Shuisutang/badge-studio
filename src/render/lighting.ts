@@ -88,7 +88,7 @@ export const ACRYLIC_LIGHT = {
   /** thin dark keyline around the printed main art (real 曲绘亚克力) */
   keyline: { width: 4.5, color: 'rgba(26,20,36,0.88)' },
   /** frame band behind the main art: blur radius (design px) and a darkening glaze */
-  band: { blur: 2.5, dim: 'rgba(18,14,28,0.34)' },
+  band: { blur: 2.5, dim: 'rgba(18,14,28,0.34)', dimCutout: 'rgba(18,14,28,0.22)' },
   groundShadow: { rgb: '40,56,76', alpha: [0.02, 0.09] as AB, blur: [12, 26] as AB, offsetY: 8, offsetX: 3, squash: 0.12, radiusK: 0.5, contact: [0.03, 0.06] as AB },
   backSheet: { thicknessK: 0.5, minThickness: 4, fill: 'rgba(214,232,240,.42)', edge: 'rgba(255,255,255,.75)', low: 'rgba(96,128,150,.22)' },
   /** clear body tint under everything */

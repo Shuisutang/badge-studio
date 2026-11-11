@@ -86,8 +86,8 @@ export const DESIGN = 960;
 export const BADGE_FACE: Rect = { x: 118, y: 102, w: 724, h: 724 };
 export const ACRYLIC_FACE: Rect = { x: 128, y: 112, w: 704, h: 704 };
 export const ACRYLIC_HOLE = { dx: 46, dy: 46, r: 23 };
-/** Acrylic main art at 主图尺寸 100% covers ≈84% of the plate width (official ≈77%, nudged up per CC); the rest is the dimmed frame band. */
-export const ACRYLIC_ART_BASE = 0.896;
+/** Acrylic main art at 主图尺寸 100% covers ≈80% of the plate width (official ≈77%, per CC); the rest is the dimmed frame band. */
+export const ACRYLIC_ART_BASE = 0.853;
 
 /** Centre of the acrylic hole in output pixels for a canvas of `dim`. */
 export function acrylicHoleCenter(dim: number): { x: number; y: number; r: number } {

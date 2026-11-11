@@ -267,7 +267,8 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   ctx.clip();
   const band = A.band;
   if ('filter' in ctx) ctx.filter = `blur(${(band.blur * dim) / DESIGN}px)`;
-  if (hasTransparency(input.src.source)) {
+  const cutout = hasTransparency(input.src.source);
+  if (cutout) {
     const box = { x: x + rim, y: y + rim, w: w - rim * 2, h: h - rim * 2 };
     const pg = artPanelGeometry(s.style, s.rotation, s.artSize * ACRYLIC_ART_BASE, box, 0, w - 8);
     ctx.save();
@@ -281,7 +282,7 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   if ('filter' in ctx) ctx.filter = 'none';
   ctx.fillStyle = css(tint, Math.min(0.88, alpha * 0.58 + 0.26));
   ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = band.dim;
+  ctx.fillStyle = cutout ? band.dimCutout : band.dim;
   ctx.fillRect(x, y, w, h);
   ctx.restore();
 
