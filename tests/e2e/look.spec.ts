@@ -30,8 +30,9 @@ test('tin badge: top-left sheen brighter than bottom-right; rim rolls over darke
   const tl = await area(page, 230, 220);
   const br = await area(page, 720, 700);
   expect(tl).toBeGreaterThan(br + 8);
-  const rim = await area(page, 836, 470, 4); // just inside the right edge
-  const inside = await area(page, 790, 470, 4);
+  // the v2 bright edge line sits in the outer ~5px; the roll-over shade is just inside it
+  const rim = await area(page, 826, 470, 4);
+  const inside = await area(page, 760, 470, 4);
   expect(rim).toBeLessThan(inside);
 });
 
@@ -76,4 +77,14 @@ test('acrylic: clear bevel border is see-through, hole bottom-left is transparen
   expect((await pixel(page, 154, 790))[3]).toBe(0);
   const wall = await pixel(page, 154, 790 - 14);
   expect(Math.min(wall[0]!, wall[1]!, wall[2]!)).toBeGreaterThan(200);
+});
+
+test('v2 立体感 layers are back under the v3 sheen (top strip, left light, right shade)', async ({ page }) => {
+  // CC: v3 felt flat. On flat grey art the restored layers must show.
+  const strip = await area(page, 470, 108, 4);
+  const below = await area(page, 470, 170, 4);
+  expect(strip).toBeGreaterThan(below + 6);
+  const left = await area(page, 124, 600, 4);
+  const right = await area(page, 834, 600, 4);
+  expect(left).toBeGreaterThan(right + 12);
 });

@@ -39,8 +39,8 @@ export class Preview3D {
     return !this.modal.hidden;
   }
 
-  /** Print-only texture of the selected badge. */
-  private input(): ViewerInput | null {
+  /** Print-only texture of the selected badge (public for tests). */
+  input(): ViewerInput | null {
     const it = this.store.selected;
     if (!it) return null;
     const g = this.store.globals;

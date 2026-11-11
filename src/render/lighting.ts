@@ -38,16 +38,16 @@ export const BADGE_LIGHT = {
     ] as const,
   },
   /** wide, faint drop shadow of the whole badge shape */
-  dropShadow: { rgb: '40,54,76', alpha: [0.05, 0.2] as AB, blur: [14, 30] as AB, offsetY: 6, depthK: 0.5, offsetX: 2 },
+  dropShadow: { rgb: '40,54,76', alpha: [0.03, 0.12] as AB, blur: [14, 30] as AB, offsetY: 6, depthK: 0.5, offsetX: 2 },
   /** broad diagonal sheen from top-left; stops are [t along the diagonal, alpha factor] */
-  sheen: { alpha: [0.1, 0.32] as AB, stops: [[0, 0.55], [0.16, 1], [0.3, 0.42], [0.46, 0.08], [0.6, 0]] as const },
+  sheen: { alpha: [0.06, 0.22] as AB, stops: [[0, 0.55], [0.16, 1], [0.3, 0.42], [0.46, 0.08], [0.6, 0]] as const },
   /** soft dome: light centre-top-left, slightly darker bottom-right */
-  dome: { fx: 0.3, fy: 0.24, r: 0.78, light: [0.05, 0.1] as AB, shadeRgb: '22,32,50', shade: [0.03, 0.12] as AB },
+  dome: { fx: 0.3, fy: 0.24, r: 0.78, light: [0.03, 0.06] as AB, shadeRgb: '22,32,50', shade: [0.02, 0.06] as AB },
   /** printed sheet rolling over the rim */
   rollOver: {
     rgb: '20,28,44',
-    even: { alpha: [0.14, 0.26] as AB, blur: [6, 12] as AB },
-    lower: { alpha: [0.1, 0.25] as AB, blur: [10, 18] as AB, dx: -3, dy: -5 },
+    even: { alpha: [0.08, 0.14] as AB, blur: [6, 12] as AB },
+    lower: { alpha: [0.06, 0.14] as AB, blur: [10, 18] as AB, dx: -3, dy: -5 },
     lip: { alpha: [0.35, 0.4] as AB, blur: 2.5, dx: 2.2, dy: 2.6 },
     outline: { rgb: '70,86,108', alpha: [0.08, 0.08] as AB, width: 1 },
   },
@@ -85,7 +85,7 @@ export const ACRYLIC_LIGHT = {
   radius: 9,
   /** width of the clear bevel border in design px */
   border: 22,
-  groundShadow: { rgb: '40,56,76', alpha: [0.03, 0.14] as AB, blur: [12, 26] as AB, offsetY: 8, offsetX: 3, squash: 0.12, radiusK: 0.5, contact: [0.03, 0.06] as AB },
+  groundShadow: { rgb: '40,56,76', alpha: [0.02, 0.09] as AB, blur: [12, 26] as AB, offsetY: 8, offsetX: 3, squash: 0.12, radiusK: 0.5, contact: [0.03, 0.06] as AB },
   backSheet: { thicknessK: 0.5, minThickness: 4, fill: 'rgba(214,232,240,.42)', edge: 'rgba(255,255,255,.75)', low: 'rgba(96,128,150,.22)' },
   /** clear body tint under everything */
   body: ['rgba(246,252,255,.30)', 'rgba(228,244,250,.14)', 'rgba(200,226,242,.26)'] as const,

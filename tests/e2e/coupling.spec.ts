@@ -132,7 +132,8 @@ test('smaller centre panel: tint reaches the panel edge (no untinted halo)', asy
   await settle(page);
   // inner window at 100% starts at x=162; at 80% the panel starts at ~226.
   const gap = await pixel(page, 190, 480);
-  expect(Math.max(gap[0]!, gap[1]!, gap[2]!)).toBeLessThan(60);
+  // black tint (+ the soft v3 sheen on top); an untinted halo would show the bright art
+  expect(Math.max(gap[0]!, gap[1]!, gap[2]!)).toBeLessThan(85);
 });
 
 test('controls are grouped: primary visible, advanced folded by default', async ({ page }) => {

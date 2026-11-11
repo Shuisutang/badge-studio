@@ -23,6 +23,7 @@ import {
   badgeFaceLighting,
   badgeGloss,
 } from './lighting';
+import { depthAcrylicBackSheet, depthAcrylicGroundShadow, depthAcrylicRim, depthContactShadow, depthFaceLighting } from './lightingDepth';
 import { roundedSubpath, rr } from './paths';
 
 export interface RenderInput {
@@ -164,7 +165,10 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
 
   const print = !!input.printOnly;
   if (!print) {
+    // v2 depth (ellipse shadow + back sheet) first, v3 soft shadow + edge on top
+    depthAcrylicGroundShadow(ctx, ACRYLIC_FACE, sh, thickness);
     acrylicGroundShadow(ctx, ACRYLIC_FACE, sh, thickness);
+    depthAcrylicBackSheet(ctx, ACRYLIC_FACE, r, thickness);
     acrylicBackSheet(ctx, ACRYLIC_FACE, r, thickness);
   }
 
@@ -172,6 +176,19 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   rr(ctx, x, y, w, h, r);
   ctx.clip();
   if (!print) acrylicBody(ctx, ACRYLIC_FACE);
+
+  // Printed background inside the bevel: the same artwork under the per-image
+  // colour glaze (as in v2). It must always cover the whole print area, so a
+  // centre panel smaller than 100% sits on tinted art, never on bare acrylic.
+  // Fix (v3 regression): v3 drew the art only in the bevel ring and the panel,
+  // leaving the gap between them see-through when 主图尺寸 < 100%.
+  ctx.save();
+  rr(ctx, x + rim, y + rim, w - rim * 2, h - rim * 2, 1);
+  ctx.clip();
+  drawImageFit(ctx, input, x, y, w, h, g.outerZoom / 100, 'outer');
+  ctx.fillStyle = css(tint, Math.min(0.88, alpha * 0.58 + 0.26));
+  ctx.fillRect(x, y, w, h);
+  ctx.restore();
 
   // Clear bevel border: the art edge seen through thick acrylic — stretched a
   // little, washed out, with a light per-image colour glaze.
@@ -196,7 +213,10 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   drawArtPanel(ctx, input, { x: x + rim, y: y + rim, w: w - rim * 2, h: h - rim * 2 }, 0, { noShade: true, outerLimit: w - 8 });
   ctx.restore();
 
-  if (!print) acrylicRimLight(ctx, ACRYLIC_FACE, b, gloss);
+  if (!print) {
+    depthAcrylicRim(ctx, ACRYLIC_FACE, b, gloss, r);
+    acrylicRimLight(ctx, ACRYLIC_FACE, b, gloss);
+  }
   ctx.restore();
 
   drawCopyright(ctx, input, x, y, w, h, r);
@@ -228,7 +248,10 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
   const sh = has3d ? g.shadow / 100 : 0;
 
   // Elliptical, translucent contact shadow fading to alpha 0: no slab, no dark line.
-  if (!input.printOnly) badgeContactShadow(ctx, BADGE_FACE, sh, depth, r);
+  if (!input.printOnly) {
+    depthContactShadow(ctx, BADGE_FACE, sh, depth);
+    badgeContactShadow(ctx, BADGE_FACE, sh, depth, r);
+  }
 
   // Base printed layer always fills the whole badge face.
   ctx.save();
@@ -278,7 +301,10 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
   ctx.restore();
 
   if (!input.printOnly) {
-    if (has3d && b > 0) badgeFaceLighting(ctx, BADGE_FACE, r, b, square);
+    if (has3d && b > 0) {
+      depthFaceLighting(ctx, BADGE_FACE, r, b);
+      badgeFaceLighting(ctx, BADGE_FACE, r, b, square);
+    }
     badgeGloss(ctx, BADGE_FACE, r, g.gloss / 100);
   }
 
