@@ -21,6 +21,21 @@
       <span class="head-note">无需 PSD · 图片只在你的浏览器中处理 · <span id="saveState">自动保存在本机</span></span>
     </header>
 
+    <div id="modal3d" class="modal3d" role="dialog" aria-modal="true" aria-labelledby="m3dTitle" hidden>
+      <div class="m3d-bar">
+        <strong id="m3dTitle">3D 预览</strong>
+        <span class="m3d-hint" id="m3dHint">拖动旋转 · 双指或滚轮缩放</span>
+        <span class="spacer"></span>
+        <button type="button" class="btn small" id="m3dFlip">翻面</button>
+        <button type="button" class="btn small" id="m3dReset">复位</button>
+        <button type="button" class="btn small primary" id="m3dClose" aria-label="关闭 3D 预览">关闭</button>
+      </div>
+      <div class="m3d-stage" id="m3dStage">
+        <div class="m3d-loading" id="m3dLoading"><span class="spinner" aria-hidden="true"></span>正在加载 3D…</div>
+      </div>
+      <p class="m3d-note">实时光照预览，仅供查看材质；导出的仍是 2D 样机图。</p>
+    </div>
+
     <main class="layout">
       <aside class="side" aria-label="设置">
         <section class="panel upload-panel" aria-labelledby="h-upload">
@@ -211,6 +226,7 @@
             <button type="button" class="nav prev" id="prevItem" aria-label="上一张">‹</button>
             <canvas id="preview" width="960" height="960" role="img" aria-label="当前徽章样机预览" tabindex="-1"></canvas>
             <button type="button" class="nav next" id="nextItem" aria-label="下一张">›</button>
+            <button type="button" class="view3d" id="view3d" title="可以拖动旋转的 3D 预览（只用于查看，导出仍是 2D 图）">3D 预览</button>
             <div id="busy" class="busy" hidden><span class="spinner" aria-hidden="true"></span><span id="busyText">处理中…</span></div>
           </div>
           <div class="preview-actions">

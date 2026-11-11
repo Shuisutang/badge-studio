@@ -20,19 +20,23 @@ interface Case {
   no3d?: boolean;
 }
 
+/**
+ * Since v3 the lighting/shadow layers were retuned against official merch
+ * photos (see look.spec.ts), and the square badge got slightly softer corners
+ * plus a metal rim, so parity with v16 is only checked for the PRINT: rounded
+ * badges with 3D off and gloss 0 (geometry, fit, tint ring, rotation, mark).
+ */
+const FLAT = { gloss: 0 };
 const CASES: Case[] = [
-  { name: 'demo-rounded', img: null },
-  { name: 'red-rounded', img: 'red.png' },
-  { name: 'square-rounded', img: 'square.png' },
-  { name: 'photo-square', img: 'photo.webp', style: 'square' },
-  { name: 'photo-acrylic', img: 'photo.webp', style: 'acrylic' },
-  { name: 'square-rot-12', img: 'square.png', rotation: -12 },
+  { name: 'demo-rounded', img: null, no3d: true, ranges: FLAT },
+  { name: 'red-rounded', img: 'red.png', no3d: true, ranges: FLAT },
+  { name: 'square-rounded', img: 'square.png', no3d: true, ranges: FLAT },
+  { name: 'photo-rounded', img: 'photo.webp', no3d: true, ranges: FLAT },
+  { name: 'square-rot-12', img: 'square.png', rotation: -12, no3d: true, ranges: FLAT },
   // artSize ≠ 100 is intentionally different now (tint window follows the panel), see coupling.spec.ts
-  { name: 'square-size110', img: 'square.png', artSize: 100, ranges: { ring: 20 } },
-  { name: 'square-look', img: 'square.png', ranges: { gloss: 40, radius: 120, ring: 70, overlayAlpha: 70, bevel: 80, shadow: 90 } },
-  { name: 'red-no3d', img: 'red.png', no3d: true },
-  { name: 'blue-copyright', img: 'blue.png', copyright: true },
-  { name: 'wide-acrylic-rot', img: 'wide.jpg', style: 'acrylic' },
+  { name: 'square-size110', img: 'square.png', artSize: 100, no3d: true, ranges: { ...FLAT, ring: 20 } },
+  { name: 'square-look', img: 'square.png', no3d: true, ranges: { gloss: 0, radius: 120, ring: 70, overlayAlpha: 70 } },
+  { name: 'blue-copyright', img: 'blue.png', copyright: true, no3d: true, ranges: FLAT },
 ];
 
 async function applyCase(page: Page, c: Case, legacy: boolean): Promise<void> {

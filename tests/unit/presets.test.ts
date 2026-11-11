@@ -23,3 +23,14 @@ describe('lighting module', () => {
     for (const [, a, k] of BADGE_LIGHT.contactShadow.stops) expect(a + k).toBeLessThan(0.25);
   });
 });
+
+describe('v3 lighting constants', () => {
+  it('all shadows stay grey-blue and faint', async () => {
+    const { ACRYLIC_LIGHT } = await import('../../src/render/lighting');
+    for (const rgb of [BADGE_LIGHT.dropShadow.rgb, ACRYLIC_LIGHT.groundShadow.rgb]) {
+      const [r, , b] = rgb.split(',').map(Number);
+      expect(b).toBeGreaterThan(r!);
+    }
+    expect(BADGE_LIGHT.dropShadow.alpha[0] + BADGE_LIGHT.dropShadow.alpha[1]).toBeLessThan(0.3);
+  });
+});

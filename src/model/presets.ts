@@ -18,7 +18,7 @@ const base = (): Pick<GlobalSettings, LookKey> => ({
 });
 
 export const LOOK_PRESETS: LookPreset[] = [
-  { id: 'standard', name: '标准', hint: '默认的柔雾塑封', values: base() },
+  { id: 'standard', name: '标准', hint: '默认的马口铁质感', values: base() },
   { id: 'glossy', name: '亮面', hint: '高光更明显', values: { ...base(), gloss: 24, bevel: 50, shadow: 46 } },
   { id: 'matte', name: '哑光', hint: '几乎无反光', values: { ...base(), gloss: 0, bevel: 14, shadow: 30 } },
   { id: 'flat', name: '平面', hint: '无立体与阴影，适合排版', values: { ...base(), gloss: 0, threeDEnabled: false } },

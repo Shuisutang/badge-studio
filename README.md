@@ -45,7 +45,8 @@ src/model     数据模型、默认值、状态 store
 src/image     图片解码与缩放（createImageBitmap，超大图只保留缩略代理）
 src/color     自动取主色、叠色
 src/render    吧唧 / 亚克力渲染器（预览、缩略图、导出共用同一个入口）
-              lighting.ts 集中放阴影和高光参数，之后按实物照片调整只改这个文件
+              lighting.ts 集中放阴影和高光参数（v3 已按官方实物照片调过）
+src/three     「3D 预览」：three.js 单独分包，点按钮才加载；只用于查看，导出仍是 2D
 src/export    单张 PNG、展示拼图、zip
 src/persist   IndexedDB 自动保存
 src/ui        面板、陈列、拖放等界面

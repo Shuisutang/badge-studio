@@ -8,9 +8,9 @@ import { $ } from './dom';
 import { guardRotationSlider } from './rotation';
 
 const STYLE_HINTS: Record<ItemSettings['style'], string> = {
-  rounded: '圆角塑封：顶部细长高光，底部柔雾投影。',
-  square: '直角方吧唧：直角印刷面，保留轻塑封及柔和阴影。',
-  acrylic: '透明亚克力：薄板外缘、彩色透光边、可选左下小圆孔。',
+  rounded: '圆角马口铁吧唧：微微鼓起的面，左上斜向柔光，边缘包边变暗。',
+  square: '直角方吧唧：平整印刷面，金属反光包边，柔和投影。',
+  acrylic: '厚亚克力：透明厚边透出画面边缘，白色/彩虹边缘反光，左下白色圆孔。',
 };
 
 type NumKey<T> = { [K in keyof T]: T[K] extends number ? K : never }[keyof T];

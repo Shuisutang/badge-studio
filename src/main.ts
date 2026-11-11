@@ -13,10 +13,12 @@ import { demoArtwork } from './ui/demo';
 import { $, setBusy, toast } from './ui/dom';
 import { Gallery } from './ui/gallery';
 import { initSettingsSheet } from './ui/sheet';
+import { Preview3D } from './ui/preview3d';
 
 const store = new Store();
 const controls = new Controls(store);
 const gallery = new Gallery(store, removeItem);
+const preview3d = new Preview3D(store);
 const previewCanvas = $<HTMLCanvasElement>('preview');
 const previewCtx = previewCanvas.getContext('2d')!;
 
@@ -54,7 +56,7 @@ function syncHeader(): void {
   const inSheet = store.exportItems.length;
   $('toggleAllExport').textContent = n && inSheet === n ? '全部移出拼图' : '全部加入拼图';
   $('sheet').textContent = `▦ 导出展示拼图${n > 1 ? `（${inSheet}）` : ''}`;
-  for (const id of ['download', 'sheet', 'zipAll', 'moveLeft', 'moveRight', 'clearAll', 'prevItem', 'nextItem', 'deleteCurrent', 'toggleAllExport'])
+  for (const id of ['view3d', 'download', 'sheet', 'zipAll', 'moveLeft', 'moveRight', 'clearAll', 'prevItem', 'nextItem', 'deleteCurrent', 'toggleAllExport'])
     ($(id) as HTMLButtonElement).disabled = !it;
   ($('prevItem') as HTMLButtonElement).disabled = n < 2;
   ($('nextItem') as HTMLButtonElement).disabled = n < 2;
@@ -393,7 +395,7 @@ void restore().finally(() => {
 // Test hook (no secrets; only used by the e2e suite).
 declare global {
   interface Window {
-    __badge?: { store: Store; paintNow: () => void; saveNow: () => Promise<void> };
+    __badge?: { store: Store; paintNow: () => void; saveNow: () => Promise<void>; preview3d: Preview3D };
   }
 }
-window.__badge = { store, paintNow, saveNow };
+window.__badge = { store, paintNow, saveNow, preview3d };

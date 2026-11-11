@@ -12,8 +12,11 @@ import { css, overlayTint } from '../color/color';
 import type { ColorSamples, Drawable, GlobalSettings, ItemSettings } from '../model/types';
 import { ACRYLIC_FACE, ACRYLIC_HOLE, BADGE_FACE, DESIGN, artPanelGeometry, fitRect, type Rect } from './geometry';
 import {
+  ACRYLIC_LIGHT,
   acrylicBackSheet,
+  acrylicBody,
   acrylicGroundShadow,
+  acrylicHole,
   acrylicRimLight,
   acrylicThickness,
   badgeContactShadow,
@@ -29,6 +32,11 @@ export interface RenderInput {
   globals: GlobalSettings;
   /** Copyright logo image, if one is loaded. */
   mark: Drawable | null;
+  /**
+   * Only the printed layers (no baked lighting, shadow, rim light or hole):
+   * the texture for the 3D preview, where real lights do that job.
+   */
+  printOnly?: boolean;
 }
 
 type Ctx = CanvasRenderingContext2D;
@@ -144,35 +152,41 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   ctx.clearRect(0, 0, DESIGN, DESIGN);
   ctx.save();
   const { x, y, w, h } = ACRYLIC_FACE;
-  const r = 4;
+  const A = ACRYLIC_LIGHT;
+  const r = A.radius;
   const tint = overlayTint(s, input.colors);
   const alpha = g.overlayAlpha / 100;
   const sh = g.threeDEnabled ? g.shadow / 100 : 0;
   const gloss = g.gloss / 100;
-  const rim = 19;
+  const rim = A.border;
   const b = g.threeDEnabled ? g.bevel / 100 : 0;
   const thickness = acrylicThickness(g.threeDEnabled, g.depth);
 
-  acrylicGroundShadow(ctx, ACRYLIC_FACE, sh, thickness);
-  acrylicBackSheet(ctx, ACRYLIC_FACE, r, thickness);
+  const print = !!input.printOnly;
+  if (!print) {
+    acrylicGroundShadow(ctx, ACRYLIC_FACE, sh, thickness);
+    acrylicBackSheet(ctx, ACRYLIC_FACE, r, thickness);
+  }
 
   ctx.save();
   rr(ctx, x, y, w, h, r);
   ctx.clip();
-  const clear = ctx.createLinearGradient(x, y, x + w, y + h);
-  clear.addColorStop(0, 'rgba(242,252,255,.73)');
-  clear.addColorStop(0.43, 'rgba(222,242,250,.32)');
-  clear.addColorStop(1, 'rgba(181,219,244,.47)');
-  ctx.fillStyle = clear;
-  ctx.fillRect(x, y, w, h);
+  if (!print) acrylicBody(ctx, ACRYLIC_FACE);
 
-  // Printed border: the same artwork with a subtle per-image colour glaze.
+  // Clear bevel border: the art edge seen through thick acrylic — stretched a
+  // little, washed out, with a light per-image colour glaze.
   ctx.save();
-  rr(ctx, x + 5, y + 5, w - 10, h - 10, 1);
-  ctx.clip();
-  drawImageFit(ctx, input, x + 5, y + 5, w - 10, h - 10, g.outerZoom / 100, 'outer');
-  ctx.fillStyle = css(tint, Math.min(0.88, alpha * 0.58 + 0.26));
-  ctx.fillRect(x + 5, y + 5, w - 10, h - 10);
+  ctx.beginPath();
+  roundedSubpath(ctx, x, y, w, h, r);
+  roundedSubpath(ctx, x + rim, y + rim, w - rim * 2, h - rim * 2, 1);
+  ctx.clip('evenodd');
+  ctx.globalAlpha = A.bevelArt.alpha;
+  drawImageFit(ctx, input, x, y, w, h, (g.outerZoom / 100) * A.bevelArt.zoom, 'outer');
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = A.bevelArt.wash;
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = css(tint, Math.min(0.6, alpha * A.bevelArt.tintK));
+  ctx.fillRect(x, y, w, h);
   ctx.restore();
 
   // Inner image printed cleanly, no white mat.
@@ -182,35 +196,13 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   drawArtPanel(ctx, input, { x: x + rim, y: y + rim, w: w - rim * 2, h: h - rim * 2 }, 0, { noShade: true, outerLimit: w - 8 });
   ctx.restore();
 
-  acrylicRimLight(ctx, ACRYLIC_FACE, b, gloss);
+  if (!print) acrylicRimLight(ctx, ACRYLIC_FACE, b, gloss);
   ctx.restore();
 
   drawCopyright(ctx, input, x, y, w, h, r);
 
-  if (s.acrylicHole) {
-    // A real transparent drill hole (alpha 0), not an opaque white sticker.
-    const hx = x + ACRYLIC_HOLE.dx;
-    const hy = y + h - ACRYLIC_HOLE.dy;
-    const hr = ACRYLIC_HOLE.r;
-    ctx.save();
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.beginPath();
-    ctx.arc(hx, hy, hr, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(hx, hy, hr + 1.8, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(75,125,155,.70)';
-    ctx.lineWidth = 2.4;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(hx - 1, hy - 1, hr - 2.6, 0.97 * Math.PI, 1.75 * Math.PI);
-    ctx.strokeStyle = 'rgba(255,255,255,.88)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.restore();
-  }
+  // A real transparent drill hole (alpha 0) with a white frosted wall.
+  if (s.acrylicHole && !print) acrylicHole(ctx, x + ACRYLIC_HOLE.dx, y + h - ACRYLIC_HOLE.dy, ACRYLIC_HOLE.r);
   ctx.restore();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
@@ -225,7 +217,7 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
   ctx.save();
   const { x, y, w, h } = BADGE_FACE;
   const square = s.style === 'square';
-  const r = square ? 2 : g.radius;
+  const r = square ? 6 : g.radius;
   const ring = g.ring;
   const inner: Rect = { x: x + ring, y: y + ring, w: w - 2 * ring, h: h - 2 * ring };
   const innerR = square ? 1 : Math.max(6, r - ring * 0.85);
@@ -236,7 +228,7 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
   const sh = has3d ? g.shadow / 100 : 0;
 
   // Elliptical, translucent contact shadow fading to alpha 0: no slab, no dark line.
-  badgeContactShadow(ctx, BADGE_FACE, sh, depth);
+  if (!input.printOnly) badgeContactShadow(ctx, BADGE_FACE, sh, depth, r);
 
   // Base printed layer always fills the whole badge face.
   ctx.save();
@@ -285,8 +277,10 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
   drawArtPanel(ctx, input, inner, innerR, { outerLimit: w });
   ctx.restore();
 
-  if (has3d && b > 0) badgeFaceLighting(ctx, BADGE_FACE, r, b);
-  badgeGloss(ctx, BADGE_FACE, r, g.gloss / 100);
+  if (!input.printOnly) {
+    if (has3d && b > 0) badgeFaceLighting(ctx, BADGE_FACE, r, b, square);
+    badgeGloss(ctx, BADGE_FACE, r, g.gloss / 100);
+  }
 
   drawCopyright(ctx, input, x, y, w, h, r);
   ctx.restore();
