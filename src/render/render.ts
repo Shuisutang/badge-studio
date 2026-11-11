@@ -10,7 +10,7 @@
  */
 import { css, overlayTint } from '../color/color';
 import type { ColorSamples, Drawable, GlobalSettings, ItemSettings } from '../model/types';
-import { ACRYLIC_FACE, ACRYLIC_HOLE, BADGE_FACE, DESIGN, artPanelGeometry, fitRect, type Rect } from './geometry';
+import { ACRYLIC_FACE, ACRYLIC_ART_BASE, ACRYLIC_HOLE, BADGE_FACE, DESIGN, artPanelGeometry, fitRect, type Rect } from './geometry';
 import {
   ACRYLIC_LIGHT,
   acrylicBackSheet,
@@ -111,9 +111,9 @@ function panelSubpath(ctx: Ctx, s: ItemSettings, box: Rect, r: number, outerLimi
 }
 
 /** The centre artwork. Only this panel rotates; the printed background stays level. */
-function drawArtPanel(ctx: Ctx, input: RenderInput, box: Rect, r: number, opts: { noShade?: boolean; noTiltShadow?: boolean; outerLimit: number }): void {
+function drawArtPanel(ctx: Ctx, input: RenderInput, box: Rect, r: number, opts: { noShade?: boolean; noTiltShadow?: boolean; outerLimit: number; outline?: { width: number; color: string; scale: number }; sizeK?: number }): void {
   const s = input.settings;
-  const { deg, panelW, panelH, cx, cy, corner } = artPanelGeometry(s.style, s.rotation, s.artSize, box, r, opts.outerLimit);
+  const { deg, panelW, panelH, cx, cy, corner } = artPanelGeometry(s.style, s.rotation, s.artSize * (opts.sizeK ?? 1), box, r, opts.outerLimit);
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate((deg * Math.PI) / 180);
@@ -134,6 +134,7 @@ function drawArtPanel(ctx: Ctx, input: RenderInput, box: Rect, r: number, opts: 
   rr(ctx, px, py, panelW, panelH, corner);
   ctx.clip();
   drawImageFit(ctx, input, px, py, panelW, panelH, 1, 'inner');
+  if (opts.outline) artOutline(ctx, input, px, py, panelW, panelH, corner, opts.outline);
   if (!opts.noShade) {
     const innerShade = ctx.createLinearGradient(0, py, 0, py + panelH);
     innerShade.addColorStop(0, 'rgba(255,255,255,.018)');
@@ -144,6 +145,46 @@ function drawArtPanel(ctx: Ctx, input: RenderInput, box: Rect, r: number, opts: 
   }
   ctx.restore();
   ctx.restore();
+}
+
+/**
+ * Thin dark keyline just inside the edge of the printed main art, as on real
+ * 曲绘亚克力: (art silhouette) − (silhouette eroded by `width`). For opaque art
+ * the silhouette is the panel rectangle; for cutout art it follows the alpha.
+ * Drawn in the panel's local (rotated) frame on a small offscreen canvas.
+ */
+function artOutline(ctx: Ctx, input: RenderInput, px: number, py: number, pw: number, ph: number, corner: number, o: { width: number; color: string; scale: number }): void {
+  const k = o.scale;
+  const W = Math.max(1, Math.ceil(pw * k));
+  const H = Math.max(1, Math.ceil(ph * k));
+  const sil = document.createElement('canvas');
+  sil.width = W;
+  sil.height = H;
+  const s = sil.getContext('2d')!;
+  s.setTransform(k, 0, 0, k, -px * k, -py * k);
+  rr(s, px, py, pw, ph, corner);
+  s.clip();
+  drawImageFit(s, input, px, py, pw, ph, 1, 'inner');
+  const ring = document.createElement('canvas');
+  ring.width = W;
+  ring.height = H;
+  const e = ring.getContext('2d')!;
+  e.drawImage(sil, 0, 0);
+  // erode: keep only pixels whose neighbours at distance `width` are also inside
+  const d = Math.max(1, o.width * k);
+  e.globalCompositeOperation = 'destination-in';
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    e.drawImage(sil, Math.cos(a) * d, Math.sin(a) * d);
+  }
+  // ring = silhouette − eroded, filled with the keyline colour
+  e.globalCompositeOperation = 'xor';
+  e.drawImage(sil, 0, 0);
+  e.globalCompositeOperation = 'source-in';
+  e.fillStyle = o.color;
+  e.fillRect(0, 0, W, H);
+  ctx.drawImage(ring, px, py, W / k, H / k);
+  sil.width = sil.height = ring.width = ring.height = 0;
 }
 
 /** Flat, transparent acrylic plate with a light-catching rim; no metal, no dark slab. */
@@ -170,7 +211,7 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
     ctx.save();
     rr(ctx, x + rim, y + rim, w - rim * 2, h - rim * 2, 1);
     ctx.clip();
-    drawArtPanel(ctx, input, { x: x + rim, y: y + rim, w: w - rim * 2, h: h - rim * 2 }, 0, { noShade: true, noTiltShadow: true, outerLimit: w - 8 });
+    drawArtPanel(ctx, input, { x: x + rim, y: y + rim, w: w - rim * 2, h: h - rim * 2 }, 0, { noShade: true, noTiltShadow: true, outerLimit: w - 8, sizeK: ACRYLIC_ART_BASE });
     ctx.restore();
     ctx.restore();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -223,7 +264,7 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   ctx.save();
   rr(ctx, x + rim, y + rim, w - rim * 2, h - rim * 2, 1);
   ctx.clip();
-  drawArtPanel(ctx, input, { x: x + rim, y: y + rim, w: w - rim * 2, h: h - rim * 2 }, 0, { noShade: true, outerLimit: w - 8 });
+  drawArtPanel(ctx, input, { x: x + rim, y: y + rim, w: w - rim * 2, h: h - rim * 2 }, 0, { noShade: true, outerLimit: w - 8, sizeK: ACRYLIC_ART_BASE, outline: { width: A.keyline.width, color: A.keyline.color, scale } });
   ctx.restore();
 
   if (!print) {

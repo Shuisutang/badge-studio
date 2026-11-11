@@ -21,7 +21,7 @@ const CHECK = `(() => {
   const st = it.settings.style;
   if (st === 'acrylic') {
     if (a(480, 480) === 0) bad.push('acrylic centre empty');
-    if (it.settings.acrylicHole && a(154, 790) !== 0) bad.push('hole not transparent');
+    if (it.settings.acrylicHole && a(186, 758) !== 0) bad.push('hole not transparent');
   } else {
     // printed face is solid everywhere (no holes from crop/zoom/contain/size)
     for (const [x, y] of [[480, 480], [140, 480], [820, 480], [480, 120], [480, 810], [200, 200], [760, 760]])

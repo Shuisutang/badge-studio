@@ -85,7 +85,9 @@ export function artPanelGeometry(
 export const DESIGN = 960;
 export const BADGE_FACE: Rect = { x: 118, y: 102, w: 724, h: 724 };
 export const ACRYLIC_FACE: Rect = { x: 128, y: 112, w: 704, h: 704 };
-export const ACRYLIC_HOLE = { dx: 26, dy: 26, r: 12 };
+export const ACRYLIC_HOLE = { dx: 58, dy: 58, r: 32 };
+/** Acrylic main art at 主图尺寸 100% covers ≈74% of the plate width (as on official 曲绘亚克力); the rest is the dimmed frame band. */
+export const ACRYLIC_ART_BASE = 0.79;
 
 /** Centre of the acrylic hole in output pixels for a canvas of `dim`. */
 export function acrylicHoleCenter(dim: number): { x: number; y: number; r: number } {

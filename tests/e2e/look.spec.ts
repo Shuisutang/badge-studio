@@ -73,9 +73,9 @@ test('acrylic: clear bevel border is see-through, hole bottom-left is transparen
   expect(border[3]!).toBeGreaterThan(60);
   const print = await pixel(page, 480, 470);
   expect(print[3]).toBe(255);
-  // hole centre (ACRYLIC_FACE.x + 26, bottom - 26) is alpha 0; its wall is near-white
-  expect((await pixel(page, 154, 790))[3]).toBe(0);
-  const wall = await pixel(page, 154, 790 - 14);
+  // hole centre (ACRYLIC_FACE.x + 58, bottom - 58) is alpha 0; its wall is near-white
+  expect((await pixel(page, 186, 758))[3]).toBe(0);
+  const wall = await pixel(page, 186, 758 - 34);
   expect(Math.min(wall[0]!, wall[1]!, wall[2]!)).toBeGreaterThan(200);
 });
 

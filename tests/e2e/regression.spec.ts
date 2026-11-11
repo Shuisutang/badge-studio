@@ -57,10 +57,10 @@ test('acrylic hole is truly transparent, and closes when turned off', async ({ p
   await page.locator('[data-style="acrylic"]').click();
   await settle(page);
   await expect(page.locator('#acrylicHoleRow')).toBeVisible();
-  expect((await pixel(page, 154, 790))[3]).toBe(0);
+  expect((await pixel(page, 186, 758))[3]).toBe(0);
   await page.locator('#acrylicHole').uncheck();
   await settle(page);
-  expect((await pixel(page, 154, 790))[3]).toBeGreaterThan(0);
+  expect((await pixel(page, 186, 758))[3]).toBeGreaterThan(0);
 });
 
 test('no white frame or dark base; top highlight and soft shadow kept', async ({ page }) => {

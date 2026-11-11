@@ -49,8 +49,8 @@ describe('artPanelGeometry', () => {
     expect(artPanelGeometry('square', 20, 100, box, 1).deg).toBe(0);
     expect(artPanelGeometry('acrylic', -30, 100, box, 0).deg).toBe(0);
   });
-  it('hole centre matches the v12 test probe', () => {
+  it('hole centre matches the official-proportion probe', () => {
     const h = acrylicHoleCenter(960);
-    expect([h.x, h.y]).toEqual([154, 790]);
+    expect([h.x, h.y]).toEqual([186, 758]);
   });
 });
