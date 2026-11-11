@@ -1,792 +1,224 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>方吧唧 · 方形徽章与亚克力样机生成器 v16</title>
-<style>
-:root{color-scheme:light;--ink:#24212c;--muted:#847d90;--line:#ece9f0;--purple:#7656c8;--lav:#f6f3ff;--bg:#f8f7fa}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,"Noto Sans SC","PingFang SC","Microsoft Yahei",system-ui,sans-serif;color:var(--ink)}button,input,select{font:inherit}
-header{height:76px;padding:0 38px;display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid var(--line);gap:16px}
-.brand{display:flex;align-items:center;gap:12px}.brand-icon{height:40px;width:40px;border-radius:13px;background:linear-gradient(135deg,#9d87e4,#5a3aa9);display:grid;place-items:center;color:#fff;font-size:24px;box-shadow:0 5px 10px #7951d436}.brand h1{margin:0;font-size:19px;letter-spacing:.02em}.brand p{margin:2px 0 0;color:var(--muted);font-size:11px}.head-note{color:#9992a2;font-size:12px}
-.layout{display:grid;grid-template-columns:360px minmax(0,1fr);gap:24px;max-width:1500px;margin:24px auto;padding:0 24px}.side,.workspace{min-width:0}
-.panel{background:white;border:1px solid var(--line);border-radius:17px;box-shadow:0 3px 18px #24212c06}.side .panel{padding:22px;margin-bottom:18px}
-h2{font-size:15px;margin:0 0 18px;font-weight:750;display:flex;justify-content:space-between;align-items:center}h2 small{font-size:11px;font-weight:500;color:#aaa3b3}
-.drop{display:block;border:1.5px dashed #c9bce8;background:#fbfaff;border-radius:13px;min-height:142px;text-align:center;padding:20px 12px;cursor:pointer;transition:.18s}.drop:hover,.drop.dragging{background:#f0eaff;border-color:#8c70d7}.drop b{display:block;font-size:14px;margin:9px 0 5px}.drop p{color:#9d95ad;font-size:11px;margin:0;line-height:1.5}.upload-ic{font-size:27px;color:var(--purple);line-height:1}
-#files{display:none}.label{display:flex;justify-content:space-between;margin:18px 0 9px;font-size:12px;font-weight:650;gap:10px;align-items:center}.label span{color:var(--purple);font-variant-numeric:tabular-nums;font-weight:600}
-input[type=range]{width:100%;accent-color:var(--purple);cursor:pointer;margin:0}select,input[type=color]{border:1px solid #e9e5ef;border-radius:9px;padding:9px 10px;min-width:0;background:#fff;width:100%;font-size:13px;color:var(--ink)}
-input[type=color]{padding:6px;height:42px}
-.splits{display:grid;grid-template-columns:1fr 1fr;gap:10px}.toggle-row{display:flex;gap:7px;flex-wrap:wrap}.mode{flex:1;border:1px solid var(--line);padding:9px 0;border-radius:8px;background:white;color:#82798c;cursor:pointer;font-size:12px}.mode.active{background:var(--lav);border-color:#b29de5;color:#6647b6;font-weight:700}
-.note{font-size:11px;line-height:1.7;color:#aaa3b1;margin:13px 0 0}.preview-panel{overflow:hidden}.preview-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--line);gap:12px}.preview-head strong{font-size:15px}.preview-head .sub{color:#aaa3b0;font-size:12px;display:block;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:7px;border-radius:999px;background:#f4f0fb;color:#7656bd;font-size:11px;padding:7px 10px;white-space:nowrap}
-.preview-bg{min-height:450px;display:flex;justify-content:center;align-items:center;padding:34px 20px;transition:background .2s}.preview-bg.checkers,.tile-art.checkers{background-color:#fff;background-image:linear-gradient(45deg,#eeeaf2 25%,transparent 25%),linear-gradient(-45deg,#eeeaf2 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#eeeaf2 75%),linear-gradient(-45deg,transparent 75%,#eeeaf2 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0px}
-.preview-bg.white,.tile-art.white{background:#fff}.preview-bg.dark,.tile-art.dark{background:#33313b}
-#preview{display:block;width:min(100%,520px);aspect-ratio:1;filter:none}.preview-actions{padding:17px 22px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line)}.btn{padding:12px 17px;border-radius:10px;border:1px solid #e9e3ef;background:white;cursor:pointer;font-size:12px;font-weight:650;white-space:nowrap;transition:transform .12s,background .12s}.btn:hover{transform:translateY(-1px);background:#faf8fe}.btn.primary{background:var(--purple);color:#fff;border-color:var(--purple)}.btn.primary:hover{background:#6341bd}.spacer{flex:1}.mini-select{width:auto;min-width:100px}
-.gallery{margin-top:22px;padding:22px}.gallery h2{margin-bottom:15px}.gallery h2 .count{background:#f0ecf7;color:#7859bf;padding:4px 7px;border-radius:7px;font-size:11px}.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}.tile{border:2px solid transparent;background:#faf9fb;border-radius:12px;cursor:pointer;padding:9px;transition:.15s;min-width:0}.tile:hover{border-color:#cdbcec}.tile.selected{background:#f6f1ff;border-color:#926dd8}.tile-art{border-radius:8px;overflow:hidden;aspect-ratio:1;display:grid;place-items:center;background:white}.tile canvas{width:100%;aspect-ratio:1;display:block}.filename{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:11px;margin:8px 2px 2px;color:#696171;text-align:center}.item-tint{display:flex;align-items:center;justify-content:center;gap:6px;margin:5px 0 2px;font:10px ui-monospace,monospace;color:#7f7890}.item-tint-dot{width:11px;height:11px;border-radius:50%;border:1px solid #0002;box-shadow:0 0 0 1px #fff;flex-shrink:0}.footer{text-align:center;padding:18px;color:#aaa2af;font-size:11px}
-@media(max-width:980px){.layout{grid-template-columns:300px minmax(0,1fr);gap:16px;padding:0 16px}.side .panel{padding:18px}.preview-bg{min-height:340px}header{padding:0 19px}}
-@media(max-width:720px){header{height:68px}.head-note{display:none}.layout{display:flex;flex-direction:column}.side{display:contents}.side .panel{margin:0}.preview-panel{order:0}.side .panel:nth-child(1){order:1}.side .panel:nth-child(2){order:2}.gallery{order:3;margin-top:0}.preview-bg{min-height:0;padding:12px}.preview-actions{padding:15px}.btn{padding:11px 13px}.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.checkline{display:flex;align-items:center;gap:10px;background:#faf8fd;border-radius:10px;padding:12px 13px;font-size:13px;font-weight:600;cursor:pointer}.checkline input{width:17px;height:17px;accent-color:var(--purple)}
-.text-field{border:1px solid #e9e5ef;border-radius:9px;padding:10px;width:100%;font-size:13px;color:var(--ink)}.file-pick{display:block;border:1px dashed #c9bce8;border-radius:10px;background:#fbfaff;text-align:center;color:#7253bc;cursor:pointer;padding:12px;font-size:12px;font-weight:600}.file-pick:hover{background:#f4effe}.hint-line{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:8px;color:#9991a6;font-size:11px;min-width:0}.hint-line span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.inline-link{border:0;background:transparent;color:#7656c8;font-size:11px;cursor:pointer;white-space:nowrap}
-[hidden]{display:none !important}
-
-.style-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-.style-option{border:1px solid #e4dfea;background:#fff;border-radius:10px;min-height:42px;padding:7px 4px;font-size:11px;color:#716a7e;cursor:pointer}
-.style-option.active{border-color:#a088db;background:#f5f1ff;color:#6247ad;font-weight:750}
-.style-option:focus-visible{outline:3px solid #d6c2fa;outline-offset:2px}
-.inline-row{display:flex;align-items:center;justify-content:space-between;gap:9px;margin:4px 0 12px}
-.muted-small{font-size:11px;color:#9d94aa}
-.divider-line{border-top:1px solid #eee8f3;margin:15px 0 2px}
-.item-style-label{font-size:10px;color:#958caa;text-align:center;margin-top:4px}
-[hidden]{display:none!important}
-
-/* Edge "Super Drag" guard: the rotate control must not become selected/draggable text.
-   Only this control is non-selectable; brand/copyright text fields stay editable. */
-.drag-guard,.drag-guard *{-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
-.drag-guard input[type=range]{touch-action:none;cursor:ew-resize;min-height:28px;overscroll-behavior:contain}
-body.rotation-drag-active,body.rotation-drag-active *{-webkit-user-select:none!important;user-select:none!important;-webkit-user-drag:none!important}
-</style>
-</head>
-<body>
-<header>
-  <div class="brand"><div class="brand-icon">▢</div><div><h1>方吧唧 <span style="font-size:12px;color:#9d91aa;font-weight:500">Badge Studio</span></h1><p>方形徽章 / 亚克力 · 商品展示样机生成器</p></div></div>
-  <span class="head-note">无需 PSD · 图片只在你的浏览器中处理 · 可离线使用</span>
-</header>
-<main class="layout">
-  <aside class="side">
-    <section class="panel">
-      <h2>01 / 导入插画 <small>支持多张</small></h2>
-      <label id="drop" class="drop" for="files"><span class="upload-ic">＋</span><b>点击或拖入图片</b><p>JPG / PNG / WebP，支持批量上传<br/>建议使用 1:1 正方形插画</p></label>
-      <input id="files" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple />
-      <p class="note">每张图片独立保存款式、旋转角度和叠色。支持圆角方吧唧、直角方吧唧、透明亚克力方牌。</p>
-    </section>
-    <section class="panel">
-      <h2>02 / 款式与构图 <small>每张图片独立设置</small></h2>
-      <div class="label">样机款式</div>
-      <div class="style-switch" role="group" aria-label="样机款式">
-        <button class="style-option active" data-style="rounded" type="button">圆角方吧唧</button>
-        <button class="style-option" data-style="square" type="button">直角方吧唧</button>
-        <button class="style-option" data-style="acrylic" type="button">亚克力方牌</button>
-      </div>
-      <p id="styleHint" class="note">圆角塑封，保留柔雾边缘和顶部细高光。</p>
-      <div id="rotationControl" class="drag-guard" draggable="false">
-        <div class="label">主图旋转 <span id="rotation-v">0°</span></div>
-        <input id="rotation" type="range" min="-30" max="30" value="0" step="1" draggable="false" aria-label="主图旋转角度" />
-        <div class="inline-row" id="rotationRow"><span class="muted-small" id="rotationNote">只旋转中间主图，外圈仍保持水平</span><button type="button" class="inline-link" id="resetRotation">归零</button></div>
-      </div>
-      <p class="note" style="margin-top:5px">已优化 Edge 旋转滑块拖动，防止误触发网页搜索。也可点击滑轨或用方向键微调。</p>
-      <div class="label">主图尺寸 <span id="artSize-v">100%</span></div>
-      <input id="artSize" type="range" min="65" max="110" value="100" step="1" />
-      <label class="checkline" id="acrylicHoleRow" hidden><input id="acrylicHole" type="checkbox" checked /> 亚克力左下角透明圆孔</label>
-      <div class="divider-line"></div>
-      <div class="label">圆角半径 <span id="radius-v">84</span></div>
-      <input id="radius" type="range" min="24" max="150" value="84" />
-      <div class="label">内图边距 <span id="ring-v">44</span></div>
-      <input id="ring" type="range" min="6" max="120" value="44" />
-      <div class="label">外层图案缩放 <span id="outerZoom-v">104%</span></div>
-      <input id="outerZoom" type="range" min="90" max="140" value="104" />
-      <div class="label">叠色透明度 <span id="overlayAlpha-v">45%</span></div>
-      <input id="overlayAlpha" type="range" min="0" max="100" value="45" />
-      <div class="label">表面高光 <span id="gloss-v">10%</span></div>
-      <input id="gloss" type="range" min="0" max="60" value="10" />
-      <div class="label">外圈叠色模式</div>
-      <select id="overlayMode"><option value="auto">自动取主色</option><option value="custom">自定义颜色</option><option value="white">白色叠层</option><option value="black">黑色叠层</option></select>
-      <div class="splits">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="方形吧唧与亚克力方牌的商品样机生成器。图片只在浏览器里处理，不上传。" />
+    <meta name="theme-color" content="#7656c8" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='6' width='52' height='52' rx='15' fill='%237656c8'/%3E%3Crect x='19' y='19' width='26' height='26' rx='6' fill='none' stroke='white' stroke-width='4'/%3E%3C/svg%3E" />
+    <title>方吧唧 · 方形徽章与亚克力样机生成器</title>
+  </head>
+  <body>
+    <a class="skip" href="#preview">跳到预览</a>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">▢</div>
         <div>
-          <div class="label">叠色颜色 <span id="overlayHex">#C9D8EA</span></div>
-          <input id="overlayColor" type="color" value="#c9d8ea" />
-        </div>
-        <div>
-          <div class="label">插画填充方式</div>
-          <div class="toggle-row"><button class="mode active" data-fit="cover">铺满裁切</button><button class="mode" data-fit="contain">完整显示</button></div>
+          <h1>方吧唧 <span class="brand-en">Badge Studio</span></h1>
+          <p>方形徽章 / 亚克力 · 商品展示样机生成器</p>
         </div>
       </div>
-      <p class="note">自动取色会同步到当前徽章的色块与 HEX 色值；每张徽章独立取色。手动选择颜色只修改当前选中的徽章。</p>
-      <div class="label">中心主图缩放 <span id="zoom-v">100%</span></div>
-      <input id="zoom" type="range" min="75" max="180" value="100" />
-      <div class="splits"><div><div class="label">水平偏移 <span id="offsetX-v">0</span></div><input id="offsetX" type="range" min="-100" max="100" value="0"/></div><div><div class="label">垂直偏移 <span id="offsetY-v">0</span></div><input id="offsetY" type="range" min="-100" max="100" value="0"/></div></div>
-    </section>
-    <section class="panel">
-      <h2>03 / 柔和立体与材质 <small>非金属</small></h2>
-      <label class="checkline"><input id="threeDEnabled" type="checkbox" checked />启用柔和立体效果</label>
-      <div class="label">弧面强度 <span id="bevel-v">30%</span></div>
-      <input id="bevel" type="range" min="0" max="100" value="30" />
-      <div class="label">柔和边缘厚度 <span id="depth-v">11</span></div>
-      <input id="depth" type="range" min="0" max="28" value="11" />
-      <div class="label">柔和投影 <span id="shadow-v">38%</span></div>
-      <input id="shadow" type="range" min="0" max="100" value="38" />
-      <p class="note">圆角/直角吧唧沿用柔雾塑封；亚克力款另用浅色透明层、光线折射边缘和打孔。</p>
-    </section>
-    <section class="panel">
-      <h2>04 / 右下角版权标 <small>文字或图片 Logo</small></h2>
-      <label class="checkline"><input id="copyrightEnabled" type="checkbox" />显示版权标</label>
-      <div class="label">版权标类型</div>
-      <select id="markMode"><option value="text">文字</option><option value="logo">上传透明 PNG Logo</option></select>
-      <div id="markTextSettings">
-        <div class="label">版权文字</div>
-        <input id="markText" class="text-field" type="text" value="© YOUR BRAND" maxlength="90" placeholder="如 © 2026 ABC / © SEGA" />
-        <div class="label">文字大小 <span id="markSize-v">19</span></div>
-        <input id="markSize" type="range" min="10" max="38" value="19" />
-        <div class="label">文字颜色</div>
-        <div class="splits">
-          <select id="markColorMode"><option value="white">白色</option><option value="black">黑色</option><option value="custom">自定义</option></select>
-          <input id="markColor" type="color" value="#ffffff" />
+      <span class="head-note">无需 PSD · 图片只在你的浏览器中处理 · <span id="saveState">自动保存在本机</span></span>
+    </header>
+
+    <main class="layout">
+      <aside class="side" aria-label="设置">
+        <section class="panel upload-panel" aria-labelledby="h-upload">
+          <h2 id="h-upload">01 / 导入插画 <small>支持多张 · 拖入 · 粘贴</small></h2>
+          <label id="drop" class="drop" for="files">
+            <span class="upload-ic" aria-hidden="true">＋</span>
+            <b>点击、拖入或粘贴图片</b>
+            <p>JPG / PNG / WebP / GIF，支持批量<br />建议 1:1 正方形、短边 1000px 以上</p>
+            <span id="loadProgress" class="load-progress" hidden></span>
+          </label>
+          <input id="files" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple />
+        </section>
+
+        <div class="settings">
+          <details class="panel" open id="p-style">
+            <summary><h2>02 / 款式与构图 <small>每张图片独立设置</small></h2></summary>
+            <div class="label" id="styleLabel">样机款式</div>
+            <div class="style-switch" role="group" aria-labelledby="styleLabel">
+              <button class="style-option active" data-style="rounded" type="button" aria-pressed="true">圆角方吧唧</button>
+              <button class="style-option" data-style="square" type="button" aria-pressed="false">直角方吧唧</button>
+              <button class="style-option" data-style="acrylic" type="button" aria-pressed="false">亚克力方牌</button>
+            </div>
+            <p id="styleHint" class="note">圆角塑封：顶部细长高光，底部柔雾投影。</p>
+            <div id="rotationControl" class="drag-guard" draggable="false">
+              <div class="label"><label for="rotation">主图旋转</label> <output id="rotation-v" for="rotation">0°</output></div>
+              <input id="rotation" type="range" min="-30" max="30" value="0" step="1" draggable="false" />
+              <div class="inline-row" id="rotationRow">
+                <span class="muted-small" id="rotationNote">只旋转中间主图，外圈仍保持水平</span>
+                <button type="button" class="inline-link" id="resetRotation">归零</button>
+              </div>
+            </div>
+            <div class="label"><label for="artSize">主图尺寸</label> <output id="artSize-v">100%</output></div>
+            <input id="artSize" type="range" min="65" max="110" value="100" step="1" data-item="artSize" data-unit="%" />
+            <label class="checkline" id="acrylicHoleRow" hidden><input id="acrylicHole" type="checkbox" checked /> 亚克力左下角透明圆孔</label>
+
+            <div class="divider-line"></div>
+            <div class="label" id="fitLabel">插画填充方式</div>
+            <div class="toggle-row" role="group" aria-labelledby="fitLabel">
+              <button class="mode active" data-fit="cover" type="button" aria-pressed="true">铺满裁切</button>
+              <button class="mode" data-fit="contain" type="button" aria-pressed="false">完整显示</button>
+            </div>
+            <div class="label"><label for="zoom">中心主图缩放</label> <output id="zoom-v">100%</output></div>
+            <input id="zoom" type="range" min="75" max="180" value="100" data-item="zoom" data-unit="%" />
+            <div class="splits">
+              <div>
+                <div class="label"><label for="offsetX">水平位置</label> <output id="offsetX-v">0</output></div>
+                <input id="offsetX" type="range" min="-100" max="100" value="0" data-item="offsetX" />
+              </div>
+              <div>
+                <div class="label"><label for="offsetY">垂直位置</label> <output id="offsetY-v">0</output></div>
+                <input id="offsetY" type="range" min="-100" max="100" value="0" data-item="offsetY" />
+              </div>
+            </div>
+            <div class="inline-row">
+              <span class="muted-small" id="panHint">裁切和位置只影响当前图片</span>
+              <button type="button" class="inline-link" id="resetCrop">重置裁切</button>
+            </div>
+
+            <div class="divider-line"></div>
+            <div class="label"><label for="overlayMode">外圈叠色</label> <output id="overlayHex">#C9D8EA</output></div>
+            <div class="splits">
+              <select id="overlayMode">
+                <option value="auto">自动取主色</option>
+                <option value="custom">自定义颜色</option>
+                <option value="white">白色叠层</option>
+                <option value="black">黑色叠层</option>
+              </select>
+              <input id="overlayColor" type="color" value="#c9d8ea" aria-label="叠色颜色" />
+            </div>
+            <p class="note">每张图自动取自己的主色；手动改色只影响当前图片。</p>
+            <button type="button" class="btn wide" id="applyAll">把当前款式和构图应用到全部图片</button>
+          </details>
+
+          <details class="panel" open id="p-look">
+            <summary><h2>03 / 外观与材质 <small>所有图片共用</small></h2></summary>
+            <div class="label"><label for="radius">圆角半径</label> <output id="radius-v">84</output></div>
+            <input id="radius" type="range" min="24" max="150" value="84" data-global="radius" />
+            <div class="label"><label for="ring">内图边距</label> <output id="ring-v">44</output></div>
+            <input id="ring" type="range" min="6" max="120" value="44" data-global="ring" />
+            <div class="label"><label for="outerZoom">外层图案缩放</label> <output id="outerZoom-v">104%</output></div>
+            <input id="outerZoom" type="range" min="90" max="140" value="104" data-global="outerZoom" data-unit="%" />
+            <div class="label"><label for="overlayAlpha">叠色透明度</label> <output id="overlayAlpha-v">45%</output></div>
+            <input id="overlayAlpha" type="range" min="0" max="100" value="45" data-global="overlayAlpha" data-unit="%" />
+            <div class="label"><label for="gloss">表面高光</label> <output id="gloss-v">10%</output></div>
+            <input id="gloss" type="range" min="0" max="60" value="10" data-global="gloss" data-unit="%" />
+            <div class="divider-line"></div>
+            <label class="checkline"><input id="threeDEnabled" type="checkbox" checked />启用柔和立体效果</label>
+            <div class="label"><label for="bevel">弧面强度</label> <output id="bevel-v">30%</output></div>
+            <input id="bevel" type="range" min="0" max="100" value="30" data-global="bevel" data-unit="%" />
+            <div class="label"><label for="depth">柔和边缘厚度</label> <output id="depth-v">11</output></div>
+            <input id="depth" type="range" min="0" max="28" value="11" data-global="depth" />
+            <div class="label"><label for="shadow">柔和投影</label> <output id="shadow-v">38%</output></div>
+            <input id="shadow" type="range" min="0" max="100" value="38" data-global="shadow" data-unit="%" />
+            <p class="note">圆角/直角吧唧是柔雾塑封；亚克力款另有浅色透明层、透光边缘和打孔。</p>
+          </details>
+
+          <details class="panel" open id="p-mark">
+            <summary><h2>04 / 右下角版权标 <small>文字或图片 Logo</small></h2></summary>
+            <label class="checkline"><input id="copyrightEnabled" type="checkbox" />显示版权标</label>
+            <div class="label"><label for="markMode">版权标类型</label></div>
+            <select id="markMode">
+              <option value="text">文字</option>
+              <option value="logo">上传透明 PNG Logo</option>
+            </select>
+            <div id="markTextSettings">
+              <div class="label"><label for="markText">版权文字</label></div>
+              <input id="markText" class="text-field" type="text" value="© YOUR BRAND" maxlength="90" placeholder="如 © 2026 ABC" />
+              <div class="label"><label for="markSize">文字大小</label> <output id="markSize-v">19</output></div>
+              <input id="markSize" type="range" min="10" max="38" value="19" data-global="markSize" />
+              <div class="label"><label for="markColorMode">文字颜色</label></div>
+              <div class="splits">
+                <select id="markColorMode">
+                  <option value="white">白色</option>
+                  <option value="black">黑色</option>
+                  <option value="custom">自定义</option>
+                </select>
+                <input id="markColor" type="color" value="#ffffff" aria-label="自定义文字颜色" />
+              </div>
+            </div>
+            <div id="markLogoSettings" hidden>
+              <div class="label">选择 Logo 文件</div>
+              <label class="file-pick" for="markLogo">＋ 上传 PNG / WebP 图片</label>
+              <input id="markLogo" type="file" accept="image/png,image/webp,image/jpeg" hidden />
+              <div class="hint-line"><span id="markLogoName">尚未选择图片</span><button id="clearMarkLogo" type="button" class="inline-link">移除</button></div>
+              <div class="label"><label for="markLogoWidth">Logo 宽度</label> <output id="markLogoWidth-v">100</output></div>
+              <input id="markLogoWidth" type="range" min="25" max="200" value="100" data-global="markLogoWidth" />
+            </div>
+            <div class="label"><label for="markOpacity">版权标不透明度</label> <output id="markOpacity-v">90%</output></div>
+            <input id="markOpacity" type="range" min="0" max="100" value="90" data-global="markOpacity" data-unit="%" />
+            <div class="splits">
+              <div>
+                <div class="label"><label for="markRight">右侧留距</label> <output id="markRight-v">54</output></div>
+                <input id="markRight" type="range" min="8" max="170" value="54" data-global="markRight" />
+              </div>
+              <div>
+                <div class="label"><label for="markBottom">下方留距</label> <output id="markBottom-v">18</output></div>
+                <input id="markBottom" type="range" min="8" max="150" value="18" data-global="markBottom" />
+              </div>
+            </div>
+            <p class="note">只填写你有权使用的版权文字或品牌标识。</p>
+          </details>
         </div>
-      </div>
-      <div id="markLogoSettings" hidden>
-        <div class="label">选择 Logo 文件</div>
-        <label class="file-pick" for="markLogo">＋ 上传 PNG / WebP 图片</label>
-        <input id="markLogo" type="file" accept="image/png,image/webp,image/jpeg" hidden />
-        <div class="hint-line"><span id="markLogoName">尚未选择图片</span><button id="clearMarkLogo" type="button" class="inline-link">移除</button></div>
-        <div class="label">Logo 宽度 <span id="markLogoWidth-v">100</span></div>
-        <input id="markLogoWidth" type="range" min="25" max="200" value="100" />
-      </div>
-      <div class="label">版权标不透明度 <span id="markOpacity-v">90%</span></div>
-      <input id="markOpacity" type="range" min="0" max="100" value="90" />
-      <div class="splits"><div><div class="label">右侧留距 <span id="markRight-v">54</span></div><input id="markRight" type="range" min="8" max="170" value="54"/></div><div><div class="label">下方留距 <span id="markBottom-v">18</span></div><input id="markBottom" type="range" min="8" max="150" value="18"/></div></div>
-      <p class="note">版权标位于整个徽章的右下角、覆盖在插画上方。建议仅填写有权使用的版权文字或品牌标识。</p>
-    </section>
-    <section class="panel">
-      <h2>05 / 预览</h2>
-      <div class="label">预览背景</div>
-      <div class="toggle-row"><button class="mode active" data-bg="checkers">透明网格</button><button class="mode" data-bg="white">白底</button><button class="mode" data-bg="dark">深底</button></div>
-    </section>
-  </aside>
-  <section class="workspace">
-    <section class="panel preview-panel">
-      <div class="preview-head"><div><strong>样机预览</strong><span class="sub" id="selection">示例插画 · 上传自己的图片开始制作</span></div><span class="chip">✦ 三款式 / 主图可旋转</span></div>
-      <div id="previewBg" class="preview-bg checkers"><canvas id="preview" width="960" height="960"></canvas></div>
-      <div class="preview-actions"><button id="download" class="btn primary">↓ 导出透明 PNG</button><button id="sheet" class="btn">▦ 导出展示拼图</button><span class="spacer"></span><select class="mini-select" id="resolution" title="导出分辨率"><option value="1200">1200 px</option><option value="2000" selected>2000 px</option><option value="3000">3000 px</option></select></div>
-    </section>
-    <section class="panel gallery"><h2>06 / 徽章陈列 <span class="count" id="count">1 个</span></h2><div id="galleryGrid" class="gallery-grid"></div><p class="note">每张图片的款式、主图旋转角度和叠色独立保存；单张导出透明底，展示拼图是白底。</p></section>
-  </section>
-</main>
-<div class="footer">v12 · Made for fan-made badge and acrylic mockups · 纯前端，不上传图片到服务器</div>
-<script>
-(function(){
-'use strict';
-const $=id=>document.getElementById(id);
-const settings={radius:84,ring:44,outerZoom:104,overlayAlpha:45,gloss:10,overlayMode:'auto',overlayColor:'#c9d8ea',fit:'cover',zoom:100,offsetX:0,offsetY:0,bg:'checkers',threeDEnabled:true,bevel:30,depth:11,shadow:38,copyrightEnabled:false,markMode:'text',markText:'© YOUR BRAND',markSize:19,markColorMode:'white',markColor:'#ffffff',markLogoWidth:100,markOpacity:90,markRight:54,markBottom:18};
-const items=[];let selected=0;let markImage=null;let markImageURL=null;
-const styleTitles={rounded:'圆角方吧唧',square:'直角方吧唧',acrylic:'亚克力方牌'};
-function ensureModel(img){
-  if(!img._modelMode)img._modelMode='rounded';
-  if(!Number.isFinite(img._artRotation))img._artRotation=0;
-  if(!Number.isFinite(img._artSize))img._artSize=100;
-  if(typeof img._acrylicHole!=='boolean')img._acrylicHole=true;
-}
-function updateStyleUI(img){
-  ensureModel(img);
-  document.querySelectorAll('[data-style]').forEach(b=>{
-    const isActive=b.dataset.style===img._modelMode;
-    b.classList.toggle('active',isActive);b.setAttribute('aria-pressed',String(isActive));
-  });
-  const rotationEnabled=img._modelMode==='rounded';
-  $('rotation').value=img._artRotation;
-  $('rotation-v').textContent=(img._artRotation>0?'+':'')+img._artRotation+'°';
-  $('rotation').disabled=!rotationEnabled;
-  $('resetRotation').disabled=!rotationEnabled;
-  $('rotationRow').style.opacity=rotationEnabled?'1':'.45';
-  $('rotationNote').textContent=rotationEnabled?'只旋转中间主图，外圈仍保持水平':'直角方吧唧和亚克力不使用旋转';
-  $('artSize').value=img._artSize;
-  $('artSize-v').textContent=img._artSize+'%';
-  $('acrylicHoleRow').hidden=img._modelMode!=='acrylic';
-  $('acrylicHole').checked=img._acrylicHole;
-  $('radius').disabled=img._modelMode!=='rounded';
-  $('styleHint').textContent=img._modelMode==='rounded'
-    ?'圆角塑封：顶部细长高光，底部柔雾投影。'
-    :img._modelMode==='square'
-      ?'直角方吧唧：直角印刷面，保留轻塑封及柔和阴影。'
-      :'透明亚克力：薄板外缘、彩色透光边、可选左下小圆孔。';
-}
-function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
-// Build a rounded rectangle as a subpath. It deliberately DOES NOT call beginPath,
-// so outer + inner can share one even-odd clipping path.
-function roundedSubpath(ctx,x,y,w,h,r){
-  r=Math.min(Math.max(0,r),w/2,h/2);
-  ctx.moveTo(x+r,y);
-  ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
-  ctx.closePath();
-}
-function rr(ctx,x,y,w,h,r){ctx.beginPath();roundedSubpath(ctx,x,y,w,h,r)}
-function rgbHex(r,g,b){return `rgb(${r|0},${g|0},${b|0})`}
-function hexToArr(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(x=>x+x).join('');return [parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16)]}
-function color(arr,a=1){if(a===1)return rgbHex(...arr);return `rgba(${arr[0]|0},${arr[1]|0},${arr[2]|0},${a})`}
-function lerp(a,b,t){return a.map((v,i)=>v*(1-t)+b[i]*t)}
-function colorSample(img){
-  try{
-    const c=document.createElement('canvas');c.width=c.height=64;
-    const x=c.getContext('2d',{willReadFrequently:true});
-    x.drawImage(img,0,0,64,64);
-    const data=x.getImageData(0,0,64,64).data;
-    const s=[0,0,0,0], mid=[0,0,0,0];
-    const bins=Array.from({length:18},()=>({r:0,g:0,b:0,weight:0}));
-    for(let y=0;y<64;y++)for(let z=0;z<64;z++){
-      const j=(y*64+z)*4,a=data[j+3]/255;if(a<.12)continue;
-      const R=data[j],G=data[j+1],B=data[j+2];
-      s[0]+=R*a;s[1]+=G*a;s[2]+=B*a;s[3]+=a;
-      const center=z>12&&z<52&&y>12&&y<52;
-      if(center){mid[0]+=R*a;mid[1]+=G*a;mid[2]+=B*a;mid[3]+=a}
-      // Group chromatic pixels by hue, so different artwork does not get flattened
-      // towards one global grey-blue average. Low-saturation colors use the fallback.
-      const mx=Math.max(R,G,B),mn=Math.min(R,G,B),delta=mx-mn;
-      if(delta>=24 && delta/Math.max(mx,1)>.19){
-        let hue;
-        if(mx===R)hue=((G-B)/delta)%6;
-        else if(mx===G)hue=(B-R)/delta+2;
-        else hue=(R-G)/delta+4;
-        const h=(hue*60+360)%360;
-        const slot=Math.floor(((h+10)%360)/20);
-        const weight=a*(.65+delta/255)*(center?1.12:1);
-        const b=bins[slot];b.r+=R*weight;b.g+=G*weight;b.b+=B*weight;b.weight+=weight;
-      }
-    }
-    img._sample=s[3]?[s[0]/s[3],s[1]/s[3],s[2]/s[3]]:[125,120,141];
-    img._centerSample=mid[3]?[mid[0]/mid[3],mid[1]/mid[3],mid[2]/mid[3]]:img._sample;
-    let dominant=null;
-    for(const b of bins)if(!dominant||b.weight>dominant.weight)dominant=b;
-    img._dominantSample=dominant && dominant.weight>4
-      ?[dominant.r/dominant.weight,dominant.g/dominant.weight,dominant.b/dominant.weight]
-      :img._centerSample;
-  }catch(e){
-    img._sample=[130,124,149];img._centerSample=[150,146,167];img._dominantSample=img._centerSample;
-  }
-}
-function arrayToHex(rgb){return '#'+rgb.map(v=>Math.round(clamp(v,0,255)).toString(16).padStart(2,'0')).join('').toUpperCase()}
-function automaticOverlayTint(img){
-  const seed=(img&&img._dominantSample)||(img&&img._centerSample)||[180,186,198];
-  // A small lightness lift retains the actual artwork hue and improves differentiation.
-  return lerp(seed,[255,255,255],.13);
-}
-function ensureItemTint(img){
-  if(!img._overlayMode)img._overlayMode='auto';
-  if(!img._overlayCustomTint)img._overlayCustomTint=arrayToHex(automaticOverlayTint(img));
-}
-function overlayTint(img){
-  ensureItemTint(img);
-  if(img._overlayMode==='custom')return hexToArr(img._overlayCustomTint);
-  if(img._overlayMode==='white')return [255,255,255];
-  if(img._overlayMode==='black')return [0,0,0];
-  return automaticOverlayTint(img);
-}
-function updateOverlayColorControl(img){
-  ensureItemTint(img);
-  const hex=arrayToHex(overlayTint(img));
-  $('overlayMode').value=img._overlayMode;
-  $('overlayColor').value=hex;
-  $('overlayHex').textContent=hex;
-}
-function drawImageFit(ctx,img,x,y,w,h,zoomMul=1){
-  if(!img)return;let iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;if(!iw||!ih)return;
-  let scale=(settings.fit==='contain'?Math.min(w/iw,h/ih):Math.max(w/iw,h/ih))*(settings.zoom/100)*zoomMul;
-  let ww=iw*scale,hh=ih*scale;
-  let dx=x+(w-ww)/2+(settings.offsetX/100)*w*.35,dy=y+(h-hh)/2+(settings.offsetY/100)*h*.35;
-  ctx.drawImage(img,dx,dy,ww,hh);
-}
-function drawCopyright(ctx,x,y,w,h,r){
-  if(!settings.copyrightEnabled || settings.markOpacity<=0)return;
-  ctx.save();
-  // Clipping protects rounded corners if the user moves the label very close to the rim.
-  rr(ctx,x,y,w,h,r);ctx.clip();
-  ctx.globalAlpha=settings.markOpacity/100;
-  const rightX=x+w-settings.markRight;
-  const bottomY=y+h-settings.markBottom;
-  if(settings.markMode==='logo' && markImage){
-    const iw=markImage.naturalWidth||markImage.width, ih=markImage.naturalHeight||markImage.height;
-    if(iw>0 && ih>0){
-      const ww=settings.markLogoWidth, hh=ww*ih/iw;
-      ctx.drawImage(markImage,rightX-ww,bottomY-hh,ww,hh);
-    }
-  }else if(settings.markMode==='text'){
-    const raw=String(settings.markText||'').replace(/[\r\n\t]+/g,' ').trim();
-    if(raw){
-      let sz=settings.markSize;
-      ctx.textAlign='right';ctx.textBaseline='alphabetic';
-      ctx.font=`600 ${sz}px "Arial", "Noto Sans SC", "Microsoft YaHei", sans-serif`;
-      // Keep long copyright lines on the same line and inside the badge.
-      const maxW=w-65;
-      const measured=ctx.measureText(raw).width;
-      if(measured>maxW){sz=Math.max(9,sz*maxW/measured);ctx.font=`600 ${sz}px "Arial", "Noto Sans SC", "Microsoft YaHei", sans-serif`;}
-      const col=settings.markColorMode==='white'?'#ffffff':settings.markColorMode==='black'?'#111111':settings.markColor;
-      ctx.fillStyle=col;
-      // Thin contrast shadow, not a heavy outlined watermark.
-      ctx.shadowColor=settings.markColorMode==='black'?'rgba(255,255,255,.22)':'rgba(0,0,0,.25)';
-      ctx.shadowBlur=2;ctx.shadowOffsetY=.5;
-      ctx.fillText(raw,rightX,bottomY);
-    }
-  }
-  ctx.restore();
-}
-function getArtPanelGeometry(img,x,y,w,h,r,opts={}){
-  ensureModel(img);
-  const deg=img._modelMode==='rounded' ? (img._artRotation||0) : 0;
-  const size=img._artSize/100;
-  const absAngle=Math.abs(deg)*Math.PI/180;
-  const bboxFactor=Math.abs(Math.cos(absAngle))+Math.abs(Math.sin(absAngle));
-  const outerLimit=opts.outerLimit||w;
-  const autoFit=deg!==0 && size<=1 ? Math.min(1,(outerLimit-22)/(w*bboxFactor)) : 1;
-  const panelW=w*size*autoFit,panelH=h*size*autoFit;
-  const cx=x+w/2, cy=y+h/2;
-  const corner=deg!==0 ? 1 : r;
-  return {deg,size,panelW,panelH,cx,cy,corner};
-}
-function panelSubpath(ctx,img,x,y,w,h,r,opts={}){
-  const g=getArtPanelGeometry(img,x,y,w,h,r,opts);
-  ctx.save();
-  ctx.translate(g.cx,g.cy);
-  ctx.rotate(g.deg*Math.PI/180);
-  roundedSubpath(ctx,-g.panelW/2,-g.panelH/2,g.panelW,g.panelH,g.corner);
-  ctx.restore();
-}
-// A separate square artwork panel. Only the panel rotates; the printed background stays level.
-// At 0 deg and 100% size the legacy look is preserved as closely as possible.
-function drawArtPanel(ctx,img,x,y,w,h,r,opts={}){
-  ensureModel(img);
-  const g=getArtPanelGeometry(img,x,y,w,h,r,opts);
-  const {deg,panelW,panelH,cx,cy,corner}=g;
-  ctx.save();
-  ctx.translate(cx,cy);
-  ctx.rotate(deg*Math.PI/180);
-  const px=-panelW/2,py=-panelH/2;
-  if(deg!==0){
-    ctx.save();
-    ctx.shadowColor='rgba(16,25,44,.23)';
-    ctx.shadowBlur=9;ctx.shadowOffsetX=1;ctx.shadowOffsetY=5;
-    ctx.fillStyle='rgba(17,27,43,.12)';
-    rr(ctx,px,py,panelW,panelH,corner);ctx.fill();
-    ctx.restore();
-  }
-  ctx.save();rr(ctx,px,py,panelW,panelH,corner);ctx.clip();
-  drawImageFit(ctx,img,px,py,panelW,panelH,1);
-  if(!opts.noShade){
-    const innerShade=ctx.createLinearGradient(0,py,0,py+panelH);
-    innerShade.addColorStop(0,'rgba(255,255,255,.018)');
-    innerShade.addColorStop(.82,'rgba(0,0,0,0)');
-    innerShade.addColorStop(1,'rgba(0,0,0,.035)');
-    ctx.fillStyle=innerShade;ctx.fillRect(px,py,panelW,panelH);
-  }
-  ctx.restore();
-  ctx.restore();
-}
+      </aside>
 
-// Flat, transparent acrylic plate with light-catching rim, without metal or dark slab.
-function drawAcrylic(ctx,img,dim){
-  const scale=dim/960;
-  ctx.setTransform(scale,0,0,scale,0,0);
-  ctx.clearRect(0,0,960,960);
-  ctx.save();
-  const x=128,y=112,w=704,h=704,r=4;
-  const hole=img._acrylicHole;
-  const tint=overlayTint(img);
-  const alpha=settings.overlayAlpha/100;
-  const sh=settings.threeDEnabled?settings.shadow/100:0;
-  const gloss=settings.gloss/100;
-  const rim=19;
-  const b=settings.threeDEnabled?settings.bevel/100:0;
-  const thickness=settings.threeDEnabled?Math.max(4,settings.depth*.48):0;
+      <section class="workspace" aria-label="预览与陈列">
+        <section class="panel preview-panel">
+          <div class="preview-head">
+            <div>
+              <strong>样机预览</strong>
+              <span class="sub" id="selection">示例插画 · 上传自己的图片开始制作</span>
+            </div>
+            <div class="head-tools">
+              <span class="chip warn" id="lowRes" hidden></span>
+              <div class="toggle-row bg-switch" role="group" aria-label="预览背景">
+                <button class="mode active" data-bg="checkers" type="button" aria-pressed="true" title="透明网格">网格</button>
+                <button class="mode" data-bg="white" type="button" aria-pressed="false">白底</button>
+                <button class="mode" data-bg="dark" type="button" aria-pressed="false">深底</button>
+              </div>
+            </div>
+          </div>
+          <div id="previewBg" class="preview-bg checkers">
+            <button type="button" class="nav prev" id="prevItem" aria-label="上一张">‹</button>
+            <canvas id="preview" width="960" height="960" role="img" aria-label="当前徽章样机预览" tabindex="-1"></canvas>
+            <button type="button" class="nav next" id="nextItem" aria-label="下一张">›</button>
+            <div id="busy" class="busy" hidden><span class="spinner" aria-hidden="true"></span><span id="busyText">处理中…</span></div>
+          </div>
+          <div class="preview-actions">
+            <button id="download" class="btn primary" type="button">↓ 导出透明 PNG</button>
+            <button id="sheet" class="btn" type="button">▦ 导出展示拼图</button>
+            <button id="zipAll" class="btn" type="button">⇩ 全部打包 zip</button>
+            <span class="spacer"></span>
+            <label class="sr-only" for="resolution">导出分辨率</label>
+            <select class="mini-select" id="resolution" title="导出分辨率">
+              <option value="1200">1200 px</option>
+              <option value="2000" selected>2000 px</option>
+              <option value="3000">3000 px</option>
+            </select>
+          </div>
+        </section>
 
-  if(sh>0){
-    // Acrylic casts a pale gray-lavender blurred ground shadow.
-    ctx.save();ctx.translate(x+w/2,y+h+thickness+8);ctx.scale(1,.13);
-    let shadow=ctx.createRadialGradient(0,0,1,0,0,w*.50);
-    shadow.addColorStop(0,`rgba(42,56,72,${.05+.09*sh})`);
-    shadow.addColorStop(.56,`rgba(42,56,72,${.025+.035*sh})`);
-    shadow.addColorStop(1,'rgba(42,56,72,0)');
-    ctx.fillStyle=shadow;ctx.beginPath();ctx.arc(0,0,w*.50,0,Math.PI*2);ctx.fill();ctx.restore();
-  }
-  if(thickness>0){
-    // An almost transparent back sheet indicates sheet thickness.
-    ctx.save();ctx.shadowColor='rgba(75,102,130,.13)';ctx.shadowBlur=9;
-    ctx.fillStyle='rgba(135,165,190,.18)';
-    rr(ctx,x+2,y+thickness,w,h,r);ctx.fill();ctx.restore();
-  }
+        <section class="panel gallery" aria-labelledby="h-gallery">
+          <div class="gallery-head">
+            <h2 id="h-gallery">05 / 徽章陈列 <span class="count" id="count">1 个</span></h2>
+            <div class="gallery-tools">
+              <button type="button" class="btn small" id="moveLeft" aria-label="当前图片前移">← 前移</button>
+              <button type="button" class="btn small" id="moveRight" aria-label="当前图片后移">后移 →</button>
+              <button type="button" class="btn small danger" id="clearAll">清空</button>
+            </div>
+          </div>
+          <div id="galleryGrid" class="gallery-grid" role="listbox" aria-label="徽章列表" tabindex="0"></div>
+          <p class="note">方向键切换图片，Delete 删除。单张导出是透明底，展示拼图是白底。</p>
+        </section>
+      </section>
+    </main>
 
-  // Slightly translucent acrylic sheet.
-  ctx.save();
-  rr(ctx,x,y,w,h,r);ctx.clip();
-  let clear=ctx.createLinearGradient(x,y,x+w,y+h);
-  clear.addColorStop(0,'rgba(242,252,255,.73)');
-  clear.addColorStop(.43,'rgba(222,242,250,.32)');
-  clear.addColorStop(1,'rgba(181,219,244,.47)');
-  ctx.fillStyle=clear;ctx.fillRect(x,y,w,h);
-
-  // Printed border uses the same artwork, with a subtle per-image color glaze.
-  ctx.save();rr(ctx,x+5,y+5,w-10,h-10,1);ctx.clip();
-  drawImageFit(ctx,img,x+5,y+5,w-10,h-10,settings.outerZoom/100);
-  ctx.fillStyle=color(tint,Math.min(.88,alpha*.58+.26));
-  ctx.fillRect(x+5,y+5,w-10,h-10);
-  ctx.restore();
-
-  // Inner image is printed cleanly, with no white mat/frame.
-  ctx.save();rr(ctx,x+rim,y+rim,w-rim*2,h-rim*2,1);ctx.clip();
-  drawArtPanel(ctx,img,x+rim,y+rim,w-rim*2,h-rim*2,0,{noShade:true,outerLimit:w-8});
-  ctx.restore();
-
-  // Glass-like optical highlights at top/left, keep them thin.
-  ctx.strokeStyle=`rgba(250,255,255,${.53+.30*b})`;
-  ctx.lineWidth=5;
-  rr(ctx,x+4,y+4,w-8,h-8,2);ctx.stroke();
-  ctx.strokeStyle='rgba(100,154,183,.40)';ctx.lineWidth=2;
-  rr(ctx,x+2,y+2,w-4,h-4,2);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(x+36,y+9);ctx.lineTo(x+w-40,y+9);
-  ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=4.6;
-  ctx.lineCap='round';ctx.stroke();
-  ctx.beginPath();ctx.moveTo(x+8,y+32);ctx.lineTo(x+8,y+h-35);
-  ctx.strokeStyle='rgba(255,255,255,.37)';ctx.lineWidth=3;ctx.stroke();
-
-  if(gloss>0){
-    let shine=ctx.createLinearGradient(x,y,x+w*.57,y+h*.56);
-    shine.addColorStop(0,`rgba(255,255,255,${.36*gloss})`);
-    shine.addColorStop(.30,`rgba(255,255,255,${.07*gloss})`);
-    shine.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.fillStyle=shine;ctx.fillRect(x,y,w,h);
-  }
-  ctx.restore();
-
-  drawCopyright(ctx,x,y,w,h,r);
-
-  if(hole){
-    // Actual transparent drill hole, not an opaque white sticker.
-    const hx=x+26,hy=y+h-26,hr=12;
-    ctx.save();
-    ctx.globalCompositeOperation='destination-out';
-    ctx.beginPath();ctx.arc(hx,hy,hr,0,Math.PI*2);ctx.fill();
-    ctx.restore();
-    ctx.save();
-    ctx.beginPath();ctx.arc(hx,hy,hr+1.8,0,Math.PI*2);
-    ctx.strokeStyle='rgba(75,125,155,.70)';ctx.lineWidth=2.4;ctx.stroke();
-    ctx.beginPath();ctx.arc(hx-1,hy-1,hr-2.6,.97*Math.PI,1.75*Math.PI);
-    ctx.strokeStyle='rgba(255,255,255,.88)';ctx.lineWidth=2;ctx.stroke();
-    ctx.restore();
-  }
-  ctx.restore();ctx.setTransform(1,0,0,1,0,0);
-}
-function badge(ctx,img,dim){
-  ensureModel(img);
-  if(img._modelMode==='acrylic')return drawAcrylic(ctx,img,dim);
-  let scale=dim/960;
-  ctx.setTransform(scale,0,0,scale,0,0);
-  ctx.clearRect(0,0,960,960);
-  ctx.save();
-  const x=118,y=102,w=724,h=724,r=img._modelMode==='square'?2:settings.radius;
-  const ring=settings.ring;
-  const innerX=x+ring, innerY=y+ring, innerW=w-2*ring, innerH=h-2*ring, innerR=img._modelMode==='square'?1:Math.max(6,r-ring*.85);
-  const tint=overlayTint(img);
-  const has3d=settings.threeDEnabled;
-  const depth=has3d?settings.depth:0;
-  const b=has3d?settings.bevel/100:0;
-  const sh=has3d?settings.shadow/100:0;
-  // No stacked sidewall or blurred rectangular plate: both left hard lower edges.
-  // The face curvature below plus the elliptical contact haze create the soft volume.
-  // An elliptical, translucent contact shadow. Gradients reach alpha 0 at the
-  // outer boundary, so neither a rectangular slab nor a dark line can appear.
-  if(sh>0){
-    const cx=x+w*.5, cy=y+h+3+depth*.20;
-    ctx.save();
-    ctx.translate(cx,cy);
-    ctx.scale(1,.115+.045*sh);
-    let glow=ctx.createRadialGradient(0,0,0,0,0,w*.48);
-    glow.addColorStop(0,`rgba(42,55,72,${.055+.12*sh})`);
-    glow.addColorStop(.38,`rgba(42,55,72,${.040+.070*sh})`);
-    glow.addColorStop(.72,`rgba(42,55,72,${.012+.028*sh})`);
-    glow.addColorStop(1,'rgba(42,55,72,0)');
-    ctx.fillStyle=glow;
-    ctx.beginPath();ctx.arc(0,0,w*.48,0,Math.PI*2);ctx.fill();
-    ctx.restore();
-  }
-
-  const rotatedCenterPanel=img._modelMode==='rounded' && Math.abs(img._artRotation||0)>0.01;
-
-  // Base printed layer always fills the whole badge face.
-  // For rotated mockups, the tilted center card sits on top of this continuous background;
-  // there should be no transparent hole and no axis-aligned inner window left behind.
-  ctx.save();
-  rr(ctx,x,y,w,h,r);ctx.clip();
-  drawImageFit(ctx,img,x,y,w,h,settings.outerZoom/100);
-  let wash=ctx.createLinearGradient(x,y,x,y+h);
-  wash.addColorStop(0,'rgba(255,255,255,.05)');wash.addColorStop(.35,'rgba(255,255,255,.015)');wash.addColorStop(1,'rgba(255,255,255,.02)');
-  ctx.fillStyle=wash;ctx.fillRect(x,y,w,h);
-  ctx.restore();
-
-  // Outer-ring tint. When the main panel rotates, the clear area must rotate with it;
-  // otherwise a static inner mask appears and looks like an extra layer.
-  if(settings.overlayAlpha>0){
-    ctx.save();
-    ctx.beginPath();
-    roundedSubpath(ctx,x,y,w,h,r);
-    if(rotatedCenterPanel) panelSubpath(ctx,img,innerX,innerY,innerW,innerH,innerR,{outerLimit:w});
-    else roundedSubpath(ctx,innerX,innerY,innerW,innerH,innerR);
-    ctx.clip('evenodd');
-    ctx.fillStyle=color(tint,settings.overlayAlpha/100);
-    ctx.fillRect(x,y,w,h);
-    let rg=ctx.createLinearGradient(x,y,x+w,y+h);
-    rg.addColorStop(0,'rgba(255,255,255,.09)');rg.addColorStop(.52,'rgba(255,255,255,0)');rg.addColorStop(1,'rgba(0,0,0,.045)');
-    ctx.fillStyle=rg;ctx.fillRect(x,y,w,h);ctx.restore();
-  }
-
-  // Center artwork layer.
-  ctx.save();rr(ctx,x,y,w,h,r);ctx.clip();
-  drawArtPanel(ctx,img,innerX,innerY,innerW,innerH,innerR,{outerLimit:w});
-  ctx.restore();
-
-  if(has3d && b>0){
-    ctx.save();rr(ctx,x,y,w,h,r);ctx.clip();
-
-    // Narrow top specular strip, close to the reference look.
-    ctx.save();
-    ctx.filter='blur(0.6px)';
-    ctx.beginPath();
-    ctx.moveTo(x+r*.64,y+8);
-    ctx.lineTo(x+w-r*.66,y+8);
-    ctx.strokeStyle=`rgba(255,255,255,${.42+.30*b})`;
-    ctx.lineWidth=4.2;
-    ctx.lineCap='round';
-    ctx.stroke();
-    ctx.restore();
-
-    // Thin secondary top sheen just below the first strip.
-    let topBand=ctx.createLinearGradient(0,y+8,0,y+44);
-    topBand.addColorStop(0,`rgba(255,255,255,${.20+.18*b})`);
-    topBand.addColorStop(.5,`rgba(255,255,255,${.08+.07*b})`);
-    topBand.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.fillStyle=topBand;ctx.fillRect(x+20,y+8,w-40,38);
-
-    // Soft left/right dome shaping.
-    let left=ctx.createLinearGradient(x,0,x+74,0);
-    left.addColorStop(0,`rgba(255,255,255,${.22+.16*b})`);
-    left.addColorStop(.5,`rgba(255,255,255,${.09+.07*b})`);
-    left.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.fillStyle=left;ctx.fillRect(x,y,74,h);
-    let right=ctx.createLinearGradient(x+w-90,0,x+w,0);
-    right.addColorStop(0,'rgba(18,28,42,0)');
-    right.addColorStop(.7,`rgba(25,36,52,${.05+.06*b})`);
-    right.addColorStop(1,`rgba(18,26,40,${.16+.14*b})`);
-    ctx.fillStyle=right;ctx.fillRect(x+w-90,y,90,h);
-
-    // Bottom interior darkening so the face feels curved downward.
-    let bottomInner=ctx.createLinearGradient(0,y+h-118,0,y+h);
-    bottomInner.addColorStop(0,'rgba(14,20,31,0)');
-    bottomInner.addColorStop(1,`rgba(42,62,78,${.055+.055*b})`);
-    ctx.fillStyle=bottomInner;ctx.fillRect(x,y+h-118,w,118);
-
-    // Global dome reflection.
-    let dome=ctx.createRadialGradient(x+w*.24,y+h*.10,44,x+w*.42,y+h*.34,w*.96);
-    dome.addColorStop(0,`rgba(255,255,255,${.16+.11*b})`);
-    dome.addColorStop(.45,`rgba(255,255,255,${.045+.02*b})`);
-    dome.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.fillStyle=dome;ctx.fillRect(x,y,w,h);
-
-    ctx.restore();
-
-    // Soft bright outer edge and slightly darker lower edge.
-    rr(ctx,x+3,y+3,w-6,h-6,Math.max(0,r-3));
-    ctx.strokeStyle=`rgba(255,255,255,${.28+.34*b})`;ctx.lineWidth=2.6;ctx.stroke();
-    ctx.save();
-    ctx.beginPath();ctx.rect(x-20,y+h-64,w+40,95);ctx.clip();
-    ctx.filter='blur(5px)';
-    rr(ctx,x+3,y+3,w-6,h-6,Math.max(0,r-3));
-    ctx.strokeStyle=`rgba(81,106,129,${.055+.07*b})`;ctx.lineWidth=6;ctx.stroke();
-    ctx.restore();
-    rr(ctx,x+1,y+1,w-2,h-2,Math.max(0,r-1));
-    ctx.strokeStyle=`rgba(104,129,148,${.075+.065*b})`;ctx.lineWidth=1;ctx.stroke();
-  }
-
-  if(settings.gloss>0){
-    ctx.save();rr(ctx,x,y,w,h,r);ctx.clip();ctx.globalAlpha=settings.gloss/100;
-    let gloss=ctx.createRadialGradient(x+170,y+90,25,x+260,y+240,570);
-    gloss.addColorStop(0,'rgba(255,255,255,.34)');gloss.addColorStop(.35,'rgba(255,255,255,.07)');gloss.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.fillStyle=gloss;ctx.fillRect(x,y,w,h);ctx.restore();
-  }
-
-  drawCopyright(ctx,x,y,w,h,r);
-  ctx.restore();ctx.setTransform(1,0,0,1,0,0);
-}
-function example(){
-  let c=document.createElement('canvas');c.width=c.height=860;let g=c.getContext('2d');
-  let bg=g.createLinearGradient(0,0,860,860); bg.addColorStop(0,'#dbe9ef'); bg.addColorStop(.42,'#a8d4ef'); bg.addColorStop(1,'#efe5b8'); g.fillStyle=bg; g.fillRect(0,0,860,860);
-  g.fillStyle='rgba(255,255,255,.60)';g.beginPath();g.arc(200,270,130,0,Math.PI*2);g.fill();
-  g.fillStyle='rgba(0,57,128,.62)';g.fillRect(270,90,170,280);
-  g.fillStyle='#ffffff';g.font='700 92px system-ui';g.textAlign='center';g.fillText('ART',430,620); g.font='500 28px system-ui'; g.fillText('NO WHITE FRAME / COLOR OVERLAY RING',430,665);
-  c._sample=[193,221,232]; c._centerSample=[165,209,237]; items.push({name:'示例插画',img:c});
-}
-function refresh(){
-  const item=items[selected];if(!item)return;
-  updateOverlayColorControl(item.img);
-  updateStyleUI(item.img);
-  badge($('preview').getContext('2d'),item.img,960);
-  $('selection').textContent=item.name+' · '+(selected+1)+' / '+items.length;
-  $('count').textContent=items.length+' 个';
-  $('galleryGrid').innerHTML='';
-  for(let i=0;i<items.length;i++){
-    const cell=document.createElement('button');
-    cell.type='button';cell.className='tile'+(i===selected?' selected':'');
-    const wrap=document.createElement('div');wrap.className='tile-art '+settings.bg;
-    const canvas=document.createElement('canvas');canvas.width=canvas.height=340;
-    badge(canvas.getContext('2d'),items[i].img,340);wrap.appendChild(canvas);
-    const label=document.createElement('div');label.className='filename';label.textContent=items[i].name;
-    const colorTag=document.createElement('div');colorTag.className='item-tint';
-    const dot=document.createElement('span');dot.className='item-tint-dot';
-    const hex=arrayToHex(overlayTint(items[i].img));dot.style.backgroundColor=hex;
-    const value=document.createElement('span');value.textContent=hex;
-    colorTag.append(dot,value);
-    const modelTag=document.createElement('div');modelTag.className='item-style-label';
-    ensureModel(items[i].img);
-    modelTag.textContent=styleTitles[items[i].img._modelMode]+(items[i].img._artRotation?' · '+items[i].img._artRotation+'°':'');
-    cell.append(wrap,label,colorTag,modelTag);
-    cell.addEventListener('click',()=>{selected=i;refresh()});
-    $('galleryGrid').appendChild(cell);
-  }
-}
-async function load(files){let arr=Array.from(files).filter(f=>f.type.startsWith('image/'));if(!arr.length)return;let wasDemo=items.length===1&&items[0].name==='示例插画';let loaded=[];for(let f of arr){try{const src=URL.createObjectURL(f);let img=await new Promise((res,rej)=>{let im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=src});colorSample(img);ensureItemTint(img);loaded.push({img,name:f.name.replace(/\.[^/.]+$/,'')});URL.revokeObjectURL(src)}catch(e){alert('无法读取：'+f.name)}}if(!loaded.length)return;if(wasDemo)items.length=0;let first=items.length;items.push(...loaded);selected=first;refresh()}
-function download(blob,name){let u=URL.createObjectURL(blob);let a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500)}
-function exportSelected(){let size=Number($('resolution').value);let c=document.createElement('canvas');c.width=c.height=size;badge(c.getContext('2d'),items[selected].img,size);c.toBlob(b=>b&&download(b,items[selected].name+'_样机.png'),'image/png')}
-function exportSheet(){let n=items.length,cols=n<=3?n:n<=8?3:4,rows=Math.ceil(n/cols),tile=550,pad=70;let W=pad*2+cols*tile,H=pad*2+rows*tile;let c=document.createElement('canvas');c.width=W;c.height=H;let ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);for(let i=0;i<n;i++){let px=pad+(i%cols)*tile,py=pad+Math.floor(i/cols)*tile;let small=document.createElement('canvas');small.width=small.height=tile;badge(small.getContext('2d'),items[i].img,tile);ctx.drawImage(small,px,py)}c.toBlob(b=>b&&download(b,'方吧唧与亚克力_商品展示拼图.png'),'image/png')}
-['radius','ring','outerZoom','overlayAlpha','gloss','zoom','offsetX','offsetY','bevel','depth','shadow','markSize','markLogoWidth','markOpacity','markRight','markBottom'].forEach(id=>{let el=$(id);el.addEventListener('input',()=>{settings[id]=Number(el.value);$(id+'-v').textContent=el.value+(id==='outerZoom'||id==='overlayAlpha'||id==='gloss'||id==='zoom'||id==='bevel'||id==='shadow'||id==='markOpacity'?'%':'');refresh()})});
-document.querySelectorAll('[data-style]').forEach(b=>b.addEventListener('click',()=>{
-  const img=items[selected]?.img;if(!img)return;
-  ensureModel(img);
-  img._modelMode=b.dataset.style;
-  if(img._modelMode!=='rounded')img._artRotation=0;
-  refresh();
-}));
-// Rotation is deliberately handled with Pointer Events instead of native HTML drag.
-// This prevents Edge's Super Drag from interpreting a slider motion as a web search.
-const rotationSlider=$('rotation');
-const rotationGuard=$('rotationControl');
-let rotationPointerId=null;
-let rotationPaintFrame=0;
-function drawRotationPreview(){
-  rotationPaintFrame=0;
-  const item=items[selected];
-  if(item) badge($('preview').getContext('2d'),item.img,960);
-}
-function scheduleRotationPreview(){
-  if(!rotationPaintFrame) rotationPaintFrame=requestAnimationFrame(drawRotationPreview);
-}
-function updateRotationFromPointer(e){
-  const rect=rotationSlider.getBoundingClientRect();
-  if(rect.width<=0)return;
-  const min=Number(rotationSlider.min), max=Number(rotationSlider.max), step=Number(rotationSlider.step)||1;
-  // Account for native thumb width: beginning/end of track remain reachable.
-  const inset=9;
-  const progress=Math.max(0,Math.min(1,(e.clientX-rect.left-inset)/Math.max(1,rect.width-2*inset)));
-  const value=Math.max(min,Math.min(max,min+Math.round(((max-min)*progress)/step)*step));
-  if(Number(rotationSlider.value)!==value){
-    rotationSlider.value=String(value);
-    rotationSlider.dispatchEvent(new Event('input',{bubbles:true}));
-  }
-}
-function finishRotationDrag(e){
-  if(rotationPointerId===null || (e && e.pointerId!==rotationPointerId))return;
-  const id=rotationPointerId;
-  rotationPointerId=null;
-  document.body.classList.remove('rotation-drag-active');
-  try{if(rotationSlider.hasPointerCapture(id))rotationSlider.releasePointerCapture(id);}catch(_){}
-  if(rotationPaintFrame){cancelAnimationFrame(rotationPaintFrame);rotationPaintFrame=0;}
-  refresh(); // update gallery only once after dragging ends
-}
-rotationSlider.addEventListener('pointerdown',e=>{
-  if(rotationSlider.disabled || (e.pointerType==='mouse' && e.button!==0))return;
-  // Stop native selection/drag initiation before the browser starts its gesture.
-  e.preventDefault();
-  e.stopPropagation();
-  const selection=window.getSelection?.();
-  if(selection && selection.rangeCount)selection.removeAllRanges();
-  rotationPointerId=e.pointerId;
-  document.body.classList.add('rotation-drag-active');
-  rotationSlider.focus({preventScroll:true});
-  try{rotationSlider.setPointerCapture(e.pointerId);}catch(_){}
-  updateRotationFromPointer(e);
-});
-rotationSlider.addEventListener('pointermove',e=>{
-  if(e.pointerId!==rotationPointerId)return;
-  if(e.cancelable)e.preventDefault();
-  updateRotationFromPointer(e);
-});
-rotationSlider.addEventListener('pointerup',e=>{
-  if(e.pointerId!==rotationPointerId)return;
-  updateRotationFromPointer(e);
-  finishRotationDrag(e);
-});
-rotationSlider.addEventListener('pointercancel',finishRotationDrag);
-rotationSlider.addEventListener('lostpointercapture',finishRotationDrag);
-window.addEventListener('blur',()=>finishRotationDrag(null));
-rotationGuard.addEventListener('dragstart',e=>e.preventDefault(),true);
-document.addEventListener('selectstart',e=>{
-  if(rotationPointerId!==null || rotationGuard.contains(e.target))e.preventDefault();
-},true);
-// Prevent drag of DOM text or thumbnail images from unexpectedly invoking Edge search.
-// External file drop onto the upload area is unaffected by this handler.
-document.addEventListener('dragstart',e=>e.preventDefault(),true);
-rotationSlider.addEventListener('input',e=>{
-  const img=items[selected]?.img;if(!img)return;
-  ensureModel(img);
-  if(img._modelMode!=='rounded')return;
-  img._artRotation=Number(e.target.value);
-  $('rotation-v').textContent=(img._artRotation>0?'+':'')+img._artRotation+'°';
-  scheduleRotationPreview();
-});
-rotationSlider.addEventListener('change',()=>{
-  if(rotationPointerId===null){
-    if(rotationPaintFrame){cancelAnimationFrame(rotationPaintFrame);rotationPaintFrame=0;}
-    refresh();
-  }
-});
-$('resetRotation').addEventListener('click',()=>{
-  const img=items[selected]?.img;if(!img)return;
-  ensureModel(img);img._artRotation=0;refresh();
-});
-$('artSize').addEventListener('input',e=>{
-  const img=items[selected]?.img;if(!img)return;
-  ensureModel(img);img._artSize=Number(e.target.value);refresh();
-});
-$('acrylicHole').addEventListener('change',e=>{
-  const img=items[selected]?.img;if(!img)return;
-  ensureModel(img);img._acrylicHole=e.target.checked;refresh();
-});
-$('overlayMode').addEventListener('change',e=>{
-  const img=items[selected]?.img;if(!img)return;
-  ensureItemTint(img);
-  img._overlayMode=e.target.value;
-  refresh();
-});
-$('overlayColor').addEventListener('input',e=>{
-  const img=items[selected]?.img;if(!img)return;
-  img._overlayCustomTint=e.target.value;
-  img._overlayMode='custom';
-  refresh();
-});
-document.querySelectorAll('[data-fit]').forEach(b=>b.addEventListener('click',()=>{settings.fit=b.dataset.fit;document.querySelectorAll('[data-fit]').forEach(x=>x.classList.toggle('active',x===b));refresh()}));
-document.querySelectorAll('[data-bg]').forEach(b=>b.addEventListener('click',()=>{settings.bg=b.dataset.bg;document.querySelectorAll('[data-bg]').forEach(x=>x.classList.toggle('active',x===b));$('previewBg').className='preview-bg '+settings.bg;refresh()}));
-$('threeDEnabled').addEventListener('change',e=>{settings.threeDEnabled=e.target.checked;refresh()});
-$('copyrightEnabled').addEventListener('change',e=>{settings.copyrightEnabled=e.target.checked;refresh()});
-$('markMode').addEventListener('change',e=>{settings.markMode=e.target.value;$('markTextSettings').hidden=settings.markMode!=='text';$('markLogoSettings').hidden=settings.markMode!=='logo';refresh()});
-$('markText').addEventListener('input',e=>{settings.markText=e.target.value;refresh()});
-$('markColorMode').addEventListener('change',e=>{settings.markColorMode=e.target.value;refresh()});
-$('markColor').addEventListener('input',e=>{settings.markColor=e.target.value;settings.markColorMode='custom';$('markColorMode').value='custom';refresh()});
-$('markLogo').addEventListener('change',async e=>{
-  const f=e.target.files?.[0];e.target.value='';if(!f)return;
-  if(!/^image\/(png|webp|jpeg)$/.test(f.type)){alert('版权图标请使用 PNG / WebP / JPG');return;}
-  const url=URL.createObjectURL(f);
-  try{
-    const im=await new Promise((resolve,reject)=>{const m=new Image();m.onload=()=>resolve(m);m.onerror=()=>reject(new Error('加载失败'));m.src=url;});
-    if(markImageURL)URL.revokeObjectURL(markImageURL);
-    markImage=im;markImageURL=url;
-    $('markLogoName').textContent=f.name;
-    settings.markMode='logo';$('markMode').value='logo';$('markTextSettings').hidden=true;$('markLogoSettings').hidden=false;
-    settings.copyrightEnabled=true;$('copyrightEnabled').checked=true;refresh();
-  }catch(err){URL.revokeObjectURL(url);alert('无法读取版权图标：'+err.message);}
-});
-$('clearMarkLogo').addEventListener('click',()=>{
-  if(markImageURL)URL.revokeObjectURL(markImageURL);
-  markImageURL=null;markImage=null;$('markLogoName').textContent='尚未选择图片';refresh();
-});
-$('files').addEventListener('change',e=>{load(e.target.files);e.target.value=''});
-const d=$('drop');d.addEventListener('dragover',e=>{e.preventDefault();d.classList.add('dragging')});d.addEventListener('dragleave',()=>d.classList.remove('dragging'));d.addEventListener('drop',e=>{e.preventDefault();d.classList.remove('dragging');load(e.dataTransfer.files)});
-$('download').addEventListener('click',exportSelected);$('sheet').addEventListener('click',exportSheet);
-example();refresh();
-})();
-</script>
-</body>
+    <footer class="footer">Made by 幽酱 · 纯前端，图片不会上传到任何服务器 · <a href="https://github.com/Shuisutang/badge-studio" target="_blank" rel="noopener">GitHub</a></footer>
+    <div id="dropOverlay" class="drop-overlay" hidden><div>松开鼠标导入图片</div></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>

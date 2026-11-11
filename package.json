@@ -1,0 +1,29 @@
+{
+  "name": "badge-studio",
+  "version": "2.0.0",
+  "description": "方吧唧 Badge Studio — 方形徽章与亚克力方牌样机生成器",
+  "scripts": {
+    "dev": "vite --base /",
+    "build": "tsc -p . && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p .",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:all": "npm run typecheck && npm test && npm run build && npm run test:e2e"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=20.19"
+  }
+}
