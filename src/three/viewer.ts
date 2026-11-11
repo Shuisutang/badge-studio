@@ -246,12 +246,17 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
     const pMat = new THREE.MeshStandardMaterial({ map, roughness: 0.6, metalness: 0 });
     const print = new THREE.Mesh(pGeo, pMat);
     print.position.z = -T / 2 + 0.004;
-    // white under-print seen from the back, like AMNIBUS plates
-    const wMat = new THREE.MeshStandardMaterial({ color: 0xf4f4f2, roughness: 0.7, side: THREE.BackSide });
+    // Back-printed plate: from behind you look at the white ink layer with the art
+    // showing through it — mirrored (BackSide), lighter, desaturated and soft, like
+    // a printed sheet of paper held against the light.
+    const backTex = new THREE.CanvasTexture(backPrintCanvas(input.print));
+    backTex.colorSpace = THREE.SRGBColorSpace;
+    backTex.anisotropy = map.anisotropy;
+    const wMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.85, metalness: 0, side: THREE.BackSide });
     const white = new THREE.Mesh(pGeo, wMat);
     white.position.z = -T / 2 + 0.003;
     pivot.add(print, white, plate);
-    disposables.push(geo, mat, pGeo, pMat, wMat);
+    disposables.push(geo, mat, pGeo, pMat, wMat, backTex);
   }
 
   function resize(): void {
@@ -351,4 +356,48 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
       renderer.domElement.remove();
     },
   };
+}
+
+/**
+ * The back view of a back-printed acrylic plate: the art seen through the white
+ * ink layer — softened (down/up-sampled), desaturated and washed toward the ink
+ * colour. Pure canvas pixel work (no ctx.filter, which iOS Safari ignores).
+ */
+export function backPrintCanvas(src: HTMLCanvasElement | OffscreenCanvas | ImageBitmap | HTMLImageElement, size = 512): HTMLCanvasElement {
+  const out = document.createElement('canvas');
+  out.width = out.height = size;
+  const ctx = out.getContext('2d', { willReadFrequently: true })!;
+  const soft = document.createElement('canvas');
+  soft.width = soft.height = Math.max(16, Math.round(size / 6));
+  const sctx = soft.getContext('2d')!;
+  sctx.imageSmoothingQuality = 'high';
+  sctx.drawImage(src as CanvasImageSource, 0, 0, soft.width, soft.height);
+  ctx.fillStyle = '#f6f5f2';
+  ctx.fillRect(0, 0, size, size);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(soft, 0, 0, size, size); // diffused through the ink
+  ctx.globalAlpha = 0.6;
+  ctx.drawImage(src as CanvasImageSource, 0, 0, size, size); // a little detail survives
+  ctx.globalAlpha = 1;
+  const img = ctx.getImageData(0, 0, size, size);
+  const d = img.data;
+  const ink = [246, 245, 242];
+  const desat = 0.35; // toward grey
+  const wash = 0.3; // toward the white ink
+  for (let i = 0; i < d.length; i += 4) {
+    const a = d[i + 3]! / 255;
+    let r = d[i]! * a + ink[0]! * (1 - a);
+    let g = d[i + 1]! * a + ink[1]! * (1 - a);
+    let b = d[i + 2]! * a + ink[2]! * (1 - a);
+    const y = 0.299 * r + 0.587 * g + 0.114 * b;
+    r += (y - r) * desat;
+    g += (y - g) * desat;
+    b += (y - b) * desat;
+    d[i] = r + (ink[0]! - r) * wash;
+    d[i + 1] = g + (ink[1]! - g) * wash;
+    d[i + 2] = b + (ink[2]! - b) * wash;
+    d[i + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  return out;
 }
