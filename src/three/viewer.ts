@@ -368,7 +368,7 @@ export function backPrintCanvas(src: HTMLCanvasElement | OffscreenCanvas | Image
   out.width = out.height = size;
   const ctx = out.getContext('2d', { willReadFrequently: true })!;
   const soft = document.createElement('canvas');
-  soft.width = soft.height = Math.max(16, Math.round(size / 6));
+  soft.width = soft.height = Math.max(12, Math.round(size / 12));
   const sctx = soft.getContext('2d')!;
   sctx.imageSmoothingQuality = 'high';
   sctx.drawImage(src as CanvasImageSource, 0, 0, soft.width, soft.height);
@@ -376,14 +376,14 @@ export function backPrintCanvas(src: HTMLCanvasElement | OffscreenCanvas | Image
   ctx.fillRect(0, 0, size, size);
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(soft, 0, 0, size, size); // diffused through the ink
-  ctx.globalAlpha = 0.6;
+  ctx.globalAlpha = 0.1;
   ctx.drawImage(src as CanvasImageSource, 0, 0, size, size); // a little detail survives
   ctx.globalAlpha = 1;
   const img = ctx.getImageData(0, 0, size, size);
   const d = img.data;
   const ink = [246, 245, 242];
-  const desat = 0.35; // toward grey
-  const wash = 0.3; // toward the white ink
+  const desat = 0.55; // toward grey
+  const wash = 0.55; // toward the opaque white ink (叠层白墨)
   for (let i = 0; i < d.length; i += 4) {
     const a = d[i + 3]! / 255;
     let r = d[i]! * a + ink[0]! * (1 - a);
