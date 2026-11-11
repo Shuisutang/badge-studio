@@ -38,6 +38,8 @@ export interface RenderInput {
    * the texture for the 3D preview, where real lights do that job.
    */
   printOnly?: boolean;
+  /** acrylic only: just the art panel's alpha footprint (for the back white-ink layer in 3D) */
+  inkMask?: boolean;
 }
 
 type Ctx = CanvasRenderingContext2D;
@@ -109,7 +111,7 @@ function panelSubpath(ctx: Ctx, s: ItemSettings, box: Rect, r: number, outerLimi
 }
 
 /** The centre artwork. Only this panel rotates; the printed background stays level. */
-function drawArtPanel(ctx: Ctx, input: RenderInput, box: Rect, r: number, opts: { noShade?: boolean; outerLimit: number }): void {
+function drawArtPanel(ctx: Ctx, input: RenderInput, box: Rect, r: number, opts: { noShade?: boolean; noTiltShadow?: boolean; outerLimit: number }): void {
   const s = input.settings;
   const { deg, panelW, panelH, cx, cy, corner } = artPanelGeometry(s.style, s.rotation, s.artSize, box, r, opts.outerLimit);
   ctx.save();
@@ -117,7 +119,7 @@ function drawArtPanel(ctx: Ctx, input: RenderInput, box: Rect, r: number, opts: 
   ctx.rotate((deg * Math.PI) / 180);
   const px = -panelW / 2;
   const py = -panelH / 2;
-  if (deg !== 0) {
+  if (deg !== 0 && !opts.noTiltShadow) {
     ctx.save();
     ctx.shadowColor = 'rgba(16,25,44,.23)';
     ctx.shadowBlur = 9;
@@ -163,6 +165,17 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   const b = g.threeDEnabled ? g.bevel / 100 : 0;
   const thickness = acrylicThickness(g.threeDEnabled, g.depth);
 
+  if (input.inkMask) {
+    // White ink sits exactly under the printed art panel (same size / offset / rotation).
+    ctx.save();
+    rr(ctx, x + rim, y + rim, w - rim * 2, h - rim * 2, 1);
+    ctx.clip();
+    drawArtPanel(ctx, input, { x: x + rim, y: y + rim, w: w - rim * 2, h: h - rim * 2 }, 0, { noShade: true, noTiltShadow: true, outerLimit: w - 8 });
+    ctx.restore();
+    ctx.restore();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    return;
+  }
   const print = !!input.printOnly;
   if (!print) {
     // v2 depth (ellipse shadow + back sheet) first, v3 soft shadow + edge on top
