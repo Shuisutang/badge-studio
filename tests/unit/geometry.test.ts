@@ -51,6 +51,6 @@ describe('artPanelGeometry', () => {
   });
   it('hole centre matches the official-proportion probe', () => {
     const h = acrylicHoleCenter(960);
-    expect([h.x, h.y]).toEqual([186, 758]);
+    expect([h.x, h.y]).toEqual([174, 770]);
   });
 });

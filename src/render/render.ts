@@ -147,6 +147,29 @@ function drawArtPanel(ctx: Ctx, input: RenderInput, box: Rect, r: number, opts: 
   ctx.restore();
 }
 
+const alphaCache = new WeakMap<object, boolean>();
+/** Does the artwork have a real cutout (transparent background)? Sampled once per source. */
+function hasTransparency(src: CanvasImageSource): boolean {
+  const key = src as unknown as object;
+  const hit = alphaCache.get(key);
+  if (hit !== undefined) return hit;
+  let out = false;
+  try {
+    const c = document.createElement('canvas');
+    c.width = c.height = 32;
+    const t = c.getContext('2d', { willReadFrequently: true })!;
+    t.drawImage(src, 0, 0, 32, 32);
+    const d = t.getImageData(0, 0, 32, 32).data;
+    let clear = 0;
+    for (let i = 3; i < d.length; i += 4) if (d[i]! < 200) clear++;
+    out = clear > 32; // >3 % of the area see-through
+  } catch {
+    out = false;
+  }
+  alphaCache.set(key, out);
+  return out;
+}
+
 /**
  * Thin dark keyline just inside the edge of the printed main art, as on real
  * 曲绘亚克力: (art silhouette) − (silhouette eroded by `width`). For opaque art
@@ -236,11 +259,29 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   // centre panel smaller than 100% sits on tinted art, never on bare acrylic.
   // Fix (v3 regression): v3 drew the art only in the bevel ring and the panel,
   // leaving the gap between them see-through when 主图尺寸 < 100%.
+  // The frame band reads as *background*: blurred and dimmed so the main art pops
+  // (official 曲绘亚克力). Cutout art keeps the same size/position as the main
+  // art (a soft echo of the silhouette) instead of a bigger zoomed copy.
   ctx.save();
   rr(ctx, x + rim, y + rim, w - rim * 2, h - rim * 2, 1);
   ctx.clip();
-  drawImageFit(ctx, input, x, y, w, h, g.outerZoom / 100, 'outer');
+  const band = A.band;
+  if ('filter' in ctx) ctx.filter = `blur(${(band.blur * dim) / DESIGN}px)`;
+  if (hasTransparency(input.src.source)) {
+    const box = { x: x + rim, y: y + rim, w: w - rim * 2, h: h - rim * 2 };
+    const pg = artPanelGeometry(s.style, s.rotation, s.artSize * ACRYLIC_ART_BASE, box, 0, w - 8);
+    ctx.save();
+    ctx.translate(pg.cx, pg.cy);
+    ctx.rotate((pg.deg * Math.PI) / 180);
+    drawImageFit(ctx, input, -pg.panelW / 2, -pg.panelH / 2, pg.panelW, pg.panelH, 1, 'inner');
+    ctx.restore();
+  } else {
+    drawImageFit(ctx, input, x, y, w, h, g.outerZoom / 100, 'outer');
+  }
+  if ('filter' in ctx) ctx.filter = 'none';
   ctx.fillStyle = css(tint, Math.min(0.88, alpha * 0.58 + 0.26));
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = band.dim;
   ctx.fillRect(x, y, w, h);
   ctx.restore();
 
