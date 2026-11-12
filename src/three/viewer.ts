@@ -9,10 +9,11 @@
  */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { ACRYLIC_FACE, ACRYLIC_HOLE, BADGE_FACE, DESIGN } from '../render/geometry';
 import { ACRYLIC_LIGHT } from '../render/lighting';
 import { faceUv, projectToRoundedRect, roundedRectSdf, tinHeight, type TinShape } from './geometry3d';
+import { roundedShape } from './modelGeometry';
+import { createTinBack } from './tinBack';
 
 export interface ViewerInput {
   /** print-only render on the 960 design canvas (any resolution, square) */
@@ -41,18 +42,23 @@ export interface Viewer {
 
 const isSmall = () => Math.min(window.innerWidth, window.innerHeight) < 700;
 
-function roundedShape(hx: number, hy: number, r: number): THREE.Shape {
-  const s = new THREE.Shape();
-  s.moveTo(-hx + r, -hy);
-  s.lineTo(hx - r, -hy);
-  s.quadraticCurveTo(hx, -hy, hx, -hy + r);
-  s.lineTo(hx, hy - r);
-  s.quadraticCurveTo(hx, hy, hx - r, hy);
-  s.lineTo(-hx + r, hy);
-  s.quadraticCurveTo(-hx, hy, -hx, hy - r);
-  s.lineTo(-hx, -hy + r);
-  s.quadraticCurveTo(-hx, -hy, -hx + r, -hy);
-  return s;
+/** Broad softboxes and narrow strip lights, visible only in material reflections. */
+function studioEnvironment(): THREE.Scene {
+  const room = new THREE.Scene();
+  room.background = new THREE.Color(0x454a52);
+  const cards: [number, number, number, number, number, number][] = [
+    [-2, 0.7, 4, 0.85, 4, 3], [4, 0.5, 2, 0.65, 4, 4],
+    [0, 5, 0, 4, 2, 5], [-1.5, 1, -4, 2.4, 4, 4],
+    [3, -1, -3, 0.7, 3, 2],
+  ];
+  for (const [x, y, z, w, h, intensity] of cards) {
+    const card = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color().setScalar(intensity), side: THREE.DoubleSide }));
+    card.position.set(x, y, z);
+    card.lookAt(0, 0, 0);
+    card.rotateZ(-0.25);
+    room.add(card);
+  }
+  return room;
 }
 
 function tinFaceGeometry(shape: TinShape, seg: number, face: typeof BADGE_FACE): THREE.BufferGeometry {
@@ -92,19 +98,33 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
   renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.toneMappingExposure = 1.0;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
   host.appendChild(renderer.domElement);
   renderer.domElement.style.touchAction = 'none';
 
   const scene = new THREE.Scene();
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const env = pmrem.fromScene(new RoomEnvironment(), 0.03).texture;
+  const room = studioEnvironment();
+  const envTarget = pmrem.fromScene(room, 0.015);
+  room.traverse((o) => {
+    if (o instanceof THREE.Mesh) { o.geometry.dispose(); (o.material as THREE.Material).dispose(); }
+  });
+  const env = envTarget.texture;
   scene.environment = env;
   scene.environmentIntensity = 0.9;
 
   const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 50);
   const key = new THREE.DirectionalLight(0xffffff, 1.6);
   key.position.set(-2.2, 2.8, 3.2);
-  scene.add(key, new THREE.HemisphereLight(0xffffff, 0xcfd8e4, 0.35));
+  const backLight = new THREE.DirectionalLight(0xffffff, 1.1);
+  backLight.position.set(1.8, 2.2, -3);
+  backLight.castShadow = true;
+  backLight.shadow.mapSize.set(1024, 1024);
+  Object.assign(backLight.shadow.camera, { left: -0.8, right: 0.8, top: 0.8, bottom: -0.8, near: 0.1, far: 8 });
+  backLight.shadow.bias = -0.0002;
+  backLight.shadow.normalBias = 0.001;
+  scene.add(key, backLight, new THREE.HemisphereLight(0xffffff, 0xcfd8e4, 0.35));
 
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(1.9, 0.5),
@@ -191,11 +211,18 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
     const wallMat = sq
       ? new THREE.MeshStandardMaterial({ color: 0xdfe4ea, metalness: 1, roughness: 0.22 }) // reflective metal edge
       : new THREE.MeshPhysicalMaterial({ map, roughness: 0.4, clearcoat: 0.8, clearcoatRoughness: 0.2, color: 0xe6e6e6 });
-    const backMat = new THREE.MeshStandardMaterial({ color: 0xd8dde3, metalness: 1, roughness: 0.38 });
-    // ExtrudeGeometry groups: 0 = caps (front cap hidden under the face), 1 = sides
-    const wall = new THREE.Mesh(wallGeo, [backMat, wallMat]);
-    pivot.add(face, wall);
-    disposables.push(geo, mat, wallGeo, wallMat, backMat);
+    // Omit the solid extrusion caps: the separate recessed back must remain visible.
+    const sideGroups = wallGeo.groups.filter((g) => g.materialIndex === 1);
+    wallGeo.clearGroups();
+    for (const g of sideGroups) wallGeo.addGroup(g.start, g.count, 0);
+    // An array is intentional: three.js applies geometry groups only to material arrays.
+    const wall = new THREE.Mesh(wallGeo, [wallMat]);
+    const back = createTinBack(shape.r);
+    back.model.traverse((o) => {
+      if (o instanceof THREE.Mesh) { o.castShadow = true; o.receiveShadow = true; }
+    });
+    pivot.add(face, wall, back.model);
+    disposables.push(geo, mat, wallGeo, wallMat, ...back.disposables);
   }
 
   function buildAcrylic(input: ViewerInput, map: THREE.Texture): void {
@@ -203,8 +230,8 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
     const hx = 0.5;
     const hy = 0.5;
     const r = ACRYLIC_LIGHT.radius / f.w;
-    const T = 0.075; // ≈ 3–4 mm on a 50 mm plate, a bit exaggerated so it reads
-    const bevel = 0.006;
+    const T = 0.075; // approximately 3.75 mm on a 50 mm plate
+    const bevel = 0.004;
     const outline = roundedShape(hx - bevel, hy - bevel, Math.max(0.002, r - bevel));
     const holeX = -hx + ACRYLIC_HOLE.dx / f.w;
     const holeY = -hy + ACRYLIC_HOLE.dy / f.w;
@@ -219,17 +246,21 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
     const mat = new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
       metalness: 0,
-      roughness: 0.03 + (0.6 - input.gloss) * 0.03,
+      roughness: 0.045 - input.gloss * 0.035,
       transmission: 1,
       thickness: T,
       ior: 1.49,
-      dispersion: 1.2,
-      attenuationColor: new THREE.Color(0xe4f5f3),
-      attenuationDistance: 0.9,
+      dispersion: 0.035,
+      attenuationColor: new THREE.Color(0xf1faf9),
+      attenuationDistance: 1.8,
       specularIntensity: 1,
-      envMapIntensity: 1.1,
+      envMapIntensity: 0.85,
     });
-    const plate = new THREE.Mesh(geo, mat);
+    // The cut edge is subtly less polished than the faces, and catches the strip lights.
+    const edgeMat = mat.clone();
+    edgeMat.roughness = 0.085;
+    edgeMat.envMapIntensity = 1.25;
+    const plate = new THREE.Mesh(geo, [mat, edgeMat]);
 
     // The print, on the back face inside the plate, seen through the acrylic.
     const printShape = roundedShape(hx - 0.002, hy - 0.002, Math.max(0.002, r - 0.002));
@@ -245,9 +276,11 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
       const [u, v] = faceUv(pos.getX(i), pos.getY(i), hx, hy, f, DESIGN, 1);
       uv.setXY(i, u, v);
     }
-    const pMat = new THREE.MeshStandardMaterial({ map, roughness: 0.6, metalness: 0 });
+    // Alpha test keeps the print in the opaque transmission pass while cutting away
+    // the unprinted margin. A transparent material would disappear behind the glass.
+    const pMat = new THREE.MeshStandardMaterial({ map, alphaTest: 0.02, roughness: 0.65, metalness: 0 });
     const print = new THREE.Mesh(pGeo, pMat);
-    print.position.z = -T / 2 + 0.004;
+    print.position.z = -T / 2 - 0.0003;
     // Back-printed plate seen from behind: a crisp, flat, slightly translucent
     // white-ink layer exactly under the art panel (mirrored by BackSide), with
     // clear acrylic around it. It sits just outside the back face so it blends
@@ -260,7 +293,7 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
     white.position.z = -T / 2 - 0.0008;
     white.renderOrder = 2;
     pivot.add(print, white, plate);
-    disposables.push(geo, mat, pGeo, pMat, wMat, backTex);
+    disposables.push(geo, mat, edgeMat, pGeo, pMat, wMat, backTex);
   }
 
   function resize(): void {
@@ -285,12 +318,13 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
   let flipTarget = 0;
   let flipCur = 0;
   let intro = 0;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   function resetView(): void {
-    camera.position.set(0.5, 0.3, 2.5);
+    camera.position.set(0.8, 0.4, 2.45);
     controls.target.set(0, 0, 0);
     userMoved = false;
     flipTarget = 0;
-    intro = performance.now();
+    intro = reduceMotion.matches ? 0 : performance.now();
     resize();
   }
   controls.addEventListener('start', () => {
@@ -307,7 +341,7 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
     last = now;
     if (document.hidden) return;
     let sway = 0;
-    if (intro) {
+    if (intro && !reduceMotion.matches) {
       // gentle intro sway so the highlight visibly slides across the face
       const t = (now - intro) / 1000;
       if (t < 4) sway = Math.sin(t * 1.6) * 0.38 * (1 - t / 4);
@@ -315,7 +349,7 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
       dirty = true;
     }
     if (flipCur !== flipTarget) {
-      flipCur += (flipTarget - flipCur) * (1 - Math.exp(-dt * 7));
+      flipCur = reduceMotion.matches ? flipTarget : flipCur + (flipTarget - flipCur) * (1 - Math.exp(-dt * 7));
       if (Math.abs(flipTarget - flipCur) < 1e-3) flipCur = flipTarget;
       dirty = true;
     }
@@ -353,8 +387,11 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
       controls.dispose();
       clearModel();
       texture?.dispose();
-      env.dispose();
+      envTarget.dispose();
       pmrem.dispose();
+      floor.geometry.dispose();
+      floor.material.map?.dispose();
+      floor.material.dispose();
       renderer.dispose();
       renderer.forceContextLoss();
       renderer.domElement.remove();

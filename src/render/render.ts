@@ -286,21 +286,23 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   ctx.fillRect(x, y, w, h);
   ctx.restore();
 
-  // Clear bevel border: the art edge seen through thick acrylic — stretched a
-  // little, washed out, with a light per-image colour glaze.
-  ctx.save();
-  ctx.beginPath();
-  roundedSubpath(ctx, x, y, w, h, r);
-  roundedSubpath(ctx, x + rim, y + rim, w - rim * 2, h - rim * 2, 1);
-  ctx.clip('evenodd');
-  ctx.globalAlpha = A.bevelArt.alpha;
-  drawImageFit(ctx, input, x, y, w, h, (g.outerZoom / 100) * A.bevelArt.zoom, 'outer');
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = A.bevelArt.wash;
-  ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = css(tint, Math.min(0.6, alpha * A.bevelArt.tintK));
-  ctx.fillRect(x, y, w, h);
-  ctx.restore();
+  // 2D-only optical border. In 3D the transparent solid refracts the rear print;
+  // baking this wash into its print texture would turn the clear rim opaque.
+  if (!print) {
+    ctx.save();
+    ctx.beginPath();
+    roundedSubpath(ctx, x, y, w, h, r);
+    roundedSubpath(ctx, x + rim, y + rim, w - rim * 2, h - rim * 2, 1);
+    ctx.clip('evenodd');
+    ctx.globalAlpha = A.bevelArt.alpha;
+    drawImageFit(ctx, input, x, y, w, h, (g.outerZoom / 100) * A.bevelArt.zoom, 'outer');
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = A.bevelArt.wash;
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = css(tint, Math.min(0.6, alpha * A.bevelArt.tintK));
+    ctx.fillRect(x, y, w, h);
+    ctx.restore();
+  }
 
   // Inner image printed cleanly, no white mat.
   ctx.save();
