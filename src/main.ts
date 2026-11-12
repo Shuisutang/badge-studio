@@ -14,6 +14,7 @@ import { $, setBusy, toast } from './ui/dom';
 import { Gallery } from './ui/gallery';
 import { initSettingsSheet } from './ui/sheet';
 import { Preview3D } from './ui/preview3d';
+import { MusicSearch } from './ui/musicSearch';
 
 const store = new Store();
 const controls = new Controls(store);
@@ -201,6 +202,24 @@ $<HTMLInputElement>('files').addEventListener('change', (e) => {
 $('emptyUpload').addEventListener('click', () => $<HTMLInputElement>('files').click());
 $('addImages').addEventListener('click', () => $<HTMLInputElement>('files').click());
 $('loadDemo').addEventListener('click', addDemo);
+
+new MusicSearch(async (file, signal) => {
+  if (loading) throw new Error('还有图片正在读取，请稍等');
+  loading = true;
+  setBusy('正在导入曲绘…');
+  try {
+    const decoded = await decodeForEditing(file);
+    if (signal.aborted) {
+      for (const drawable of [decoded.preview, decoded.thumb])
+        if (drawable.source instanceof ImageBitmap) drawable.source.close();
+      signal.throwIfAborted();
+    }
+    store.add([newItem(baseName(file.name), file, decoded)], true);
+  } finally {
+    loading = false;
+    setBusy(null);
+  }
+});
 
 let replacementTarget: string | null = null;
 $('drop').addEventListener('click', () => {

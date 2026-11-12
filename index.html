@@ -47,6 +47,7 @@
             <span id="loadProgress" class="load-progress" hidden></span>
           </button>
           <button id="addImages" class="btn add-images" type="button" hidden>添加图片</button>
+          <button id="searchMusic" class="btn add-images" type="button" aria-haspopup="dialog" aria-controls="musicDialog">搜索曲绘</button>
           <input id="files" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" aria-label="添加图片" multiple hidden />
           <input id="replacementFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" aria-label="替换当前图片" hidden />
         </section>
@@ -248,7 +249,10 @@
                 <span>也可以拖到这里，或直接粘贴</span>
                 <small>JPG / PNG / WebP / GIF · 支持多张</small>
               </button>
-              <button type="button" id="loadDemo" class="inline-link try-demo">先用示例试试看</button>
+              <div class="empty-alternatives">
+                <button type="button" id="emptySearchMusic" class="btn" aria-haspopup="dialog" aria-controls="musicDialog">搜索曲绘</button>
+                <button type="button" id="loadDemo" class="inline-link try-demo">先用示例试试看</button>
+              </div>
             </div>
             <canvas id="preview" width="960" height="960" role="img" aria-label="当前徽章样机预览" tabindex="-1" hidden></canvas>
             <button type="button" class="nav next" id="nextItem" aria-label="下一张">›</button>
@@ -287,6 +291,29 @@
     </main>
 
     <footer class="footer">Made by 幽酱 · 纯前端，图片不会上传到任何服务器 · <a href="https://github.com/Shuisutang/badge-studio" target="_blank" rel="noopener">GitHub</a></footer>
+    <dialog id="musicDialog" class="music-dialog" aria-labelledby="musicTitle" aria-describedby="musicNote">
+      <div class="music-heading">
+        <div><h2 id="musicTitle">搜索曲绘</h2><p>选一首歌，直接制作样机</p></div>
+        <button type="button" id="musicClose" class="btn small" aria-label="关闭曲绘搜索">关闭</button>
+      </div>
+      <form id="musicForm">
+        <fieldset id="musicFields">
+          <legend class="sr-only">搜索游戏曲绘</legend>
+          <div class="toggle-row music-games" role="group" aria-label="选择游戏">
+            <button type="button" class="mode active" data-music-game="maimai" aria-pressed="true">舞萌 DX</button>
+            <button type="button" class="mode" data-music-game="chunithm" aria-pressed="false">中二节奏</button>
+          </div>
+          <label class="sr-only" for="musicQuery">曲名、别称、作者或歌曲 ID</label>
+          <div class="music-search-row">
+            <input id="musicQuery" class="text-field" type="search" placeholder="输入曲名、别称、作者或歌曲 ID" autocomplete="off" maxlength="120" />
+            <button type="submit" class="btn primary">搜索</button>
+          </div>
+        </fieldset>
+      </form>
+      <div class="music-status-row"><p id="musicStatus" role="status" aria-live="polite"></p><button type="button" id="musicRetry" class="inline-link" hidden>重新加载</button></div>
+      <ul id="musicResults" class="music-results" aria-label="曲绘搜索结果" aria-busy="false"></ul>
+      <p id="musicNote" class="music-note">曲库、别称和曲绘来自 <a href="https://maimai.lxns.net" target="_blank" rel="noopener noreferrer">落雪咖啡屋</a>，搜索与导入需要联网。曲绘通常仅 300～400px，适合样机预览；可在导入后替换高清图片。</p>
+    </dialog>
     <div id="dropOverlay" class="drop-overlay" hidden><div>松开鼠标导入图片</div></div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script type="module" src="/src/main.ts"></script>
