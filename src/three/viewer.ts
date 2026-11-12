@@ -18,6 +18,8 @@ import { createTinBack } from './tinBack';
 export interface ViewerInput {
   /** print-only render on the 960 design canvas (any resolution, square) */
   print: HTMLCanvasElement;
+  /** Tin side wrap uses the same artwork with the front watermark omitted. */
+  sidePrint?: HTMLCanvasElement;
   /** acrylic: alpha footprint of the printed art panel (where the back white ink is) */
   inkMask?: HTMLCanvasElement;
   style: 'rounded' | 'square' | 'acrylic';
@@ -209,6 +211,14 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
       wuv.setXY(i, u, v);
     }
     const wallMat = mat.clone();
+    if (input.sidePrint) {
+      const sideMap = new THREE.CanvasTexture(input.sidePrint);
+      sideMap.colorSpace = map.colorSpace;
+      sideMap.anisotropy = map.anisotropy;
+      sideMap.minFilter = map.minFilter;
+      wallMat.map = sideMap;
+      disposables.push(sideMap);
+    }
     // Omit the solid extrusion caps: the separate recessed back must remain visible.
     const sideGroups = wallGeo.groups.filter((g) => g.materialIndex === 1);
     wallGeo.clearGroups();

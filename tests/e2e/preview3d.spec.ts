@@ -15,6 +15,36 @@ test('acrylic print keeps the physical rim clear without erasing the printed fra
 });
 
 for (const style of ['rounded', 'square'] as const) {
+  test(`watermark stays on the front and is absent from the side wrap: ${style}`, async ({ page }) => {
+    await openApp(page, false);
+    await upload(page, ['red.png']);
+    await page.locator(`[data-style="${style}"]`).click();
+    const diff = await page.evaluate(() => {
+      const app = window.__badge!;
+      const pixels = (c: HTMLCanvasElement) => c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+      app.store.updateGlobals({ copyrightEnabled: false });
+      const clean = pixels(app.preview3d.input()!.print);
+      app.store.updateGlobals({ copyrightEnabled: true, markMode: 'text', markText: 'SIDE TEST', markSize: 32, markRight: 8, markBottom: 8 });
+      const marked = app.preview3d.input()!;
+      const front = pixels(marked.print);
+      const side = pixels(marked.sidePrint!);
+      let frontChanges = 0;
+      let sideChanges = 0;
+      for (let i = 0; i < clean.length; i++) {
+        if (front[i] !== clean[i]) frontChanges++;
+        if (side[i] !== clean[i]) sideChanges++;
+      }
+      return { frontChanges, sideChanges };
+    });
+    expect(diff.frontChanges).toBeGreaterThan(100);
+    expect(diff.sideChanges).toBe(0);
+    // Both independently owned textures also have to survive the real WebGL path.
+    await page.locator('#view3d').click();
+    await page.waitForSelector('#modal3d[data-ready]');
+    await page.waitForFunction(() => (window.__badge!.preview3d.info?.frames ?? 0) > 0);
+    await page.keyboard.press('Escape');
+  });
+
   test(`tin back hides the front artwork after flipping: ${style}`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await openApp(page, false);

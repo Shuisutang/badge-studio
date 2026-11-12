@@ -49,6 +49,15 @@ export class Preview3D {
     const c = document.createElement('canvas');
     c.width = c.height = dim;
     renderBadge(c.getContext('2d')!, { src: it.preview, settings: it.settings, colors: it.colors, globals: g, mark: this.store.mark, printOnly: true }, dim);
+    let sidePrint: HTMLCanvasElement | undefined;
+    if (it.settings.style !== 'acrylic' && g.copyrightEnabled) {
+      sidePrint = document.createElement('canvas');
+      sidePrint.width = sidePrint.height = dim;
+      renderBadge(sidePrint.getContext('2d')!, {
+        src: it.preview, settings: it.settings, colors: it.colors,
+        globals: { ...g, copyrightEnabled: false }, mark: null, printOnly: true,
+      }, dim);
+    }
     let inkMask: HTMLCanvasElement | undefined;
     if (it.settings.style === 'acrylic') {
       inkMask = document.createElement('canvas');
@@ -57,6 +66,7 @@ export class Preview3D {
     }
     return {
       print: c,
+      sidePrint,
       inkMask,
       style: it.settings.style,
       radius: g.radius,
