@@ -34,6 +34,21 @@ describe('Store', () => {
     expect(s.items[0]!.version).toBe(1);
   });
 
+  it('replacing an image keeps its order, identity, selection and settings', () => {
+    const s = new Store();
+    s.add([item('a'), item('b')]);
+    s.updateItem('a', { style: 'acrylic', artSize: 80, exported: false });
+    const settings = s.items[0]!.settings;
+    const b = s.items[1];
+    const replacement = { ...item('new'), name: 'new art', naturalWidth: 2048 };
+    s.replace('a', replacement);
+    expect(s.items.map((i) => i.id)).toEqual(['a', 'b']);
+    expect(s.selected).toMatchObject({ id: 'a', name: 'new art', naturalWidth: 2048, version: 2 });
+    expect(s.selected!.settings).toBe(settings);
+    expect(s.items[1]).toBe(b);
+    expect(s.selected!.preview).toBe(replacement.preview);
+  });
+
   it('apply-to-all copies composition but not colour or offsets', () => {
     const s = new Store();
     s.add([item('a'), item('b')]);

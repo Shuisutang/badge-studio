@@ -36,17 +36,19 @@
       <p class="m3d-note">实时光照预览，仅供查看材质；导出的仍是 2D 样机图。</p>
     </div>
 
-    <main class="layout">
-      <aside class="side" aria-label="设置">
+    <main class="layout is-empty">
+      <aside class="side" aria-label="设置" hidden>
         <section class="panel upload-panel" aria-labelledby="h-upload">
           <h2 id="h-upload">01 / 导入插画 <small>支持多张 · 拖入 · 粘贴</small></h2>
-          <label id="drop" class="drop" for="files">
-            <span class="upload-ic" aria-hidden="true">＋</span>
-            <b>点击、拖入或粘贴图片</b>
-            <p>JPG / PNG / WebP / GIF，支持批量<br />建议 1:1 正方形、短边 1000px 以上</p>
+          <button id="drop" class="drop" type="button" aria-controls="files">
+            <span id="uploadIcon" class="upload-ic" aria-hidden="true">＋</span>
+            <b id="uploadLabel">上传图片</b>
+            <span id="uploadHint" class="upload-hint">JPG / PNG / WebP / GIF，支持批量<br />建议 1:1 正方形、短边 1000px 以上</span>
             <span id="loadProgress" class="load-progress" hidden></span>
-          </label>
-          <input id="files" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple />
+          </button>
+          <button id="addImages" class="btn add-images" type="button" hidden>添加图片</button>
+          <input id="files" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" aria-label="添加图片" multiple hidden />
+          <input id="replacementFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" aria-label="替换当前图片" hidden />
         </section>
 
         <div class="settings" id="settings">
@@ -88,6 +90,20 @@
               <button type="button" class="step" data-step="artSize" data-delta="1" aria-label="主图放大 1%">＋</button>
             </div>
             <label class="checkline" id="acrylicHoleRow" hidden><input id="acrylicHole" type="checkbox" checked /> 左下角透明圆孔</label>
+            <details class="sub" id="acrylicAppearance" open hidden>
+              <summary>描边与画外背景 <small>当前图片</small></summary>
+              <div class="label"><label for="acrylicOutlineWidth">描边粗细</label> <output id="acrylicOutlineWidth-v">1.5 px</output></div>
+              <input id="acrylicOutlineWidth" type="range" min="0" max="10" step="0.5" value="1.5" data-item="acrylicOutlineWidth" data-unit=" px" />
+              <div class="label"><label for="acrylicOutlineColor">描边颜色</label> <output id="acrylicOutlineColor-v">#627A8A</output></div>
+              <input id="acrylicOutlineColor" type="color" value="#627a8a" />
+              <div class="label"><label for="acrylicOutlineOpacity">描边不透明度</label> <output id="acrylicOutlineOpacity-v">24%</output></div>
+              <input id="acrylicOutlineOpacity" type="range" min="0" max="100" value="24" data-item="acrylicOutlineOpacity" data-unit="%" />
+              <div class="label"><label for="acrylicBackgroundBrightness">画外背景明暗</label> <output id="acrylicBackgroundBrightness-v">8%</output></div>
+              <input id="acrylicBackgroundBrightness" type="range" min="-80" max="80" value="8" data-item="acrylicBackgroundBrightness" data-unit="%" />
+              <div class="range-hints"><span>更暗</span><span>更亮</span></div>
+              <p class="note">明暗只影响主图外圈，0 不额外提亮或压暗。描边粗细设为 0 可关闭描边。</p>
+              <button type="button" class="inline-link" id="resetAcrylic">恢复默认描边与背景</button>
+            </details>
             <div class="row-actions">
               <button type="button" class="btn small" id="resetItem">还原这张</button>
               <button type="button" class="btn small" id="applyAll">应用到全部图片</button>
@@ -206,12 +222,12 @@
         </div>
       </aside>
 
-      <section class="workspace" aria-label="预览与陈列">
+      <section class="workspace is-empty" aria-label="预览与陈列">
         <section class="panel preview-panel">
           <div class="preview-head">
             <div>
               <strong>样机预览</strong>
-              <span class="sub" id="selection">示例插画 · 上传自己的图片开始制作</span>
+              <span class="sub" id="selection">上传图片，开始制作样机</span>
             </div>
             <div class="head-tools">
               <span class="chip warn" id="lowRes" hidden></span>
@@ -224,12 +240,21 @@
           </div>
           <div id="previewBg" class="preview-bg checkers">
             <button type="button" class="nav prev" id="prevItem" aria-label="上一张">‹</button>
-            <canvas id="preview" width="960" height="960" role="img" aria-label="当前徽章样机预览" tabindex="-1"></canvas>
+            <div id="previewEmpty" class="preview-empty">
+              <button type="button" id="emptyUpload" class="preview-upload" aria-controls="files">
+                <span class="upload-ic" aria-hidden="true">＋</span>
+                <strong>点击上传图片</strong>
+                <span>也可以拖到这里，或直接粘贴</span>
+                <small>JPG / PNG / WebP / GIF · 支持多张</small>
+              </button>
+              <button type="button" id="loadDemo" class="inline-link try-demo">先用示例试试看</button>
+            </div>
+            <canvas id="preview" width="960" height="960" role="img" aria-label="当前徽章样机预览" tabindex="-1" hidden></canvas>
             <button type="button" class="nav next" id="nextItem" aria-label="下一张">›</button>
             <button type="button" class="view3d" id="view3d" title="可以拖动旋转的 3D 预览（只用于查看，导出仍是 2D 图）">3D 预览</button>
             <div id="busy" class="busy" hidden><span class="spinner" aria-hidden="true"></span><span id="busyText">处理中…</span></div>
           </div>
-          <div class="preview-actions">
+          <div id="previewActions" class="preview-actions" hidden>
             <button id="download" class="btn primary" type="button">↓ 导出这张 PNG</button>
             <button id="sheet" class="btn" type="button">▦ 导出展示拼图</button>
             <button id="zipAll" class="btn" type="button">⇩ 全部打包 zip</button>
@@ -244,9 +269,9 @@
           </div>
         </section>
 
-        <section class="panel gallery" aria-labelledby="h-gallery">
+        <section id="gallery" class="panel gallery" aria-labelledby="h-gallery" hidden>
           <div class="gallery-head">
-            <h2 id="h-gallery">05 / 陈列与导出列表 <span class="count" id="count">1 个</span></h2>
+            <h2 id="h-gallery">05 / 陈列与导出列表 <span class="count" id="count">0 个</span></h2>
             <div class="gallery-tools">
               <button type="button" class="btn small" id="moveLeft" aria-label="当前图片前移">← 前移</button>
               <button type="button" class="btn small" id="moveRight" aria-label="当前图片后移">后移 →</button>

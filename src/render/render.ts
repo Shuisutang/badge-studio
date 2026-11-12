@@ -8,7 +8,7 @@
  * highlight and a soft grey-blue bottom shadow; never a black base, metal shell
  * or hard shadow.
  */
-import { css, overlayTint } from '../color/color';
+import { css, hexToRgb, overlayTint } from '../color/color';
 import type { ColorSamples, Drawable, GlobalSettings, ItemSettings } from '../model/types';
 import { ACRYLIC_FACE, ACRYLIC_ART_BASE, ACRYLIC_HOLE, BADGE_FACE, DESIGN, artPanelGeometry, fitRect, type Rect } from './geometry';
 import {
@@ -171,7 +171,7 @@ function hasTransparency(src: CanvasImageSource): boolean {
 }
 
 /**
- * Thin dark keyline just inside the edge of the printed main art, as on real
+ * Adjustable keyline just inside the edge of the printed main art:
  * 曲绘亚克力: (art silhouette) − (silhouette eroded by `width`). For opaque art
  * the silhouette is the panel rectangle; for cutout art it follows the alpha.
  * Drawn in the panel's local (rotated) frame on a small offscreen canvas.
@@ -194,7 +194,7 @@ function artOutline(ctx: Ctx, input: RenderInput, px: number, py: number, pw: nu
   const e = ring.getContext('2d')!;
   e.drawImage(sil, 0, 0);
   // erode: keep only pixels whose neighbours at distance `width` are also inside
-  const d = Math.max(1, o.width * k);
+  const d = Math.max(0.1, o.width * k);
   e.globalCompositeOperation = 'destination-in';
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * Math.PI * 2;
@@ -282,8 +282,11 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   if ('filter' in ctx) ctx.filter = 'none';
   ctx.fillStyle = css(tint, Math.min(0.88, alpha * 0.58 + 0.26));
   ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = cutout ? band.dimCutout : band.dim;
-  ctx.fillRect(x, y, w, h);
+  const brightness = s.acrylicBackgroundBrightness / 100;
+  if (brightness !== 0) {
+    ctx.fillStyle = brightness > 0 ? `rgba(255,255,255,${brightness})` : `rgba(0,0,0,${-brightness})`;
+    ctx.fillRect(x, y, w, h);
+  }
   ctx.restore();
 
   // 2D-only optical border. In 3D the transparent solid refracts the rear print;
@@ -308,7 +311,12 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   ctx.save();
   rr(ctx, x + rim, y + rim, w - rim * 2, h - rim * 2, 1);
   ctx.clip();
-  drawArtPanel(ctx, input, { x: x + rim, y: y + rim, w: w - rim * 2, h: h - rim * 2 }, 0, { noShade: true, outerLimit: w - 8, sizeK: ACRYLIC_ART_BASE, outline: { width: A.keyline.width, color: A.keyline.color, scale } });
+  drawArtPanel(ctx, input, { x: x + rim, y: y + rim, w: w - rim * 2, h: h - rim * 2 }, 0, {
+    noShade: true, outerLimit: w - 8, sizeK: ACRYLIC_ART_BASE,
+    outline: s.acrylicOutlineWidth > 0 && s.acrylicOutlineOpacity > 0
+      ? { width: s.acrylicOutlineWidth, color: css(hexToRgb(s.acrylicOutlineColor), s.acrylicOutlineOpacity / 100), scale }
+      : undefined,
+  });
   ctx.restore();
 
   if (!print) {

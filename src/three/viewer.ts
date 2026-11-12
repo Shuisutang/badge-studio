@@ -260,7 +260,36 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
     const edgeMat = mat.clone();
     edgeMat.roughness = 0.085;
     edgeMat.envMapIntensity = 1.25;
-    const plate = new THREE.Mesh(geo, [mat, edgeMat]);
+    // The drill wall is a short optical path. Reusing the full plate thickness
+    // here samples the dark print behind it and makes the hole look inked black.
+    const holeMat = mat.clone();
+    holeMat.roughness = 0.16;
+    holeMat.thickness = T * 0.12;
+    holeMat.transmission = 0.96;
+    holeMat.envMapIntensity = 1.1;
+    if (input.hole) {
+      const groups = geo.groups.slice();
+      const positions = geo.attributes.position as THREE.BufferAttribute;
+      geo.clearGroups();
+      for (const group of groups) {
+        let start = group.start;
+        let material = -1;
+        for (let i = group.start; i < group.start + group.count; i += 3) {
+          let isHole = group.materialIndex === 1;
+          for (let j = i; j < i + 3 && isHole; j++) {
+            isHole = Math.hypot(positions.getX(j) - holeX, positions.getY(j) - holeY) < holeR + bevel * 2 + 0.002;
+          }
+          const next = isHole ? 2 : group.materialIndex!;
+          if (next !== material) {
+            if (i > start) geo.addGroup(start, i - start, material);
+            start = i;
+            material = next;
+          }
+        }
+        geo.addGroup(start, group.start + group.count - start, material);
+      }
+    }
+    const plate = new THREE.Mesh(geo, [mat, edgeMat, holeMat]);
 
     // The print, on the back face inside the plate, seen through the acrylic.
     const printShape = roundedShape(hx - 0.002, hy - 0.002, Math.max(0.002, r - 0.002));
@@ -293,7 +322,7 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
     white.position.z = -T / 2 - 0.0008;
     white.renderOrder = 2;
     pivot.add(print, white, plate);
-    disposables.push(geo, mat, edgeMat, pGeo, pMat, wMat, backTex);
+    disposables.push(geo, mat, edgeMat, holeMat, pGeo, pMat, wMat, backTex);
   }
 
   function resize(): void {

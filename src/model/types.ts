@@ -15,6 +15,13 @@ export interface ItemSettings {
   /** 65 … 110 (%) size of the centre artwork panel. */
   artSize: number;
   acrylicHole: boolean;
+  /** Acrylic print outline in design pixels; 0 disables it. */
+  acrylicOutlineWidth: number;
+  acrylicOutlineColor: string;
+  /** 0 … 100 (%) */
+  acrylicOutlineOpacity: number;
+  /** -80 … 80 (%), darken/lighten only the artwork outside the main panel. */
+  acrylicBackgroundBrightness: number;
   overlayMode: OverlayMode;
   /** #RRGGBB used when overlayMode === 'custom'. */
   overlayCustom: string;

@@ -47,7 +47,23 @@ function syncHeader(): void {
   const n = store.items.length;
   $('selection').textContent = it
     ? `${it.name} · ${store.selectedIndex + 1} / ${n}${it.isDemo ? ' · 上传自己的图片开始制作' : ` · 原图 ${it.naturalWidth}×${it.naturalHeight}`}`
-    : '还没有图片 · 点击左侧上传';
+    : '上传图片，开始制作样机';
+  const hasArtwork = !!it;
+  document.querySelector<HTMLElement>('.side')!.hidden = !it;
+  document.querySelector('.layout')!.classList.toggle('is-empty', !it);
+  $('previewEmpty').hidden = !!it;
+  previewCanvas.hidden = !it;
+  $('previewActions').hidden = !it;
+  $('gallery').hidden = !it;
+  $('view3d').hidden = !it;
+  $('prevItem').hidden = $('nextItem').hidden = n < 2;
+  $('uploadLabel').textContent = hasArtwork ? '替换图片' : '上传图片';
+  $('uploadIcon').textContent = hasArtwork ? '↻' : '＋';
+  $('uploadHint').textContent = hasArtwork ? '替换当前选中的图片，保留款式设置' : '支持多张图片，也可以拖入或粘贴';
+  $('drop').setAttribute('aria-controls', hasArtwork ? 'replacementFile' : 'files');
+  $('addImages').hidden = !hasArtwork;
+  document.querySelector('.upload-panel')!.classList.toggle('has-artwork', hasArtwork);
+  document.querySelector('.workspace')!.classList.toggle('is-empty', !it);
   const low = $('lowRes');
   const res = store.globals.resolution;
   const isLow = !!it && !it.isDemo && isLowRes(it.naturalWidth, it.naturalHeight, res);
@@ -174,12 +190,53 @@ async function loadFiles(list: Iterable<File>): Promise<void> {
 
 function removeItem(id: string): void {
   store.remove(id);
+  if (!store.selected) $('emptyUpload').focus();
 }
 
 $<HTMLInputElement>('files').addEventListener('change', (e) => {
   const input = e.target as HTMLInputElement;
   if (input.files) void loadFiles(input.files).finally(() => (input.value = ''));
 });
+
+$('emptyUpload').addEventListener('click', () => $<HTMLInputElement>('files').click());
+$('addImages').addEventListener('click', () => $<HTMLInputElement>('files').click());
+$('loadDemo').addEventListener('click', addDemo);
+
+let replacementTarget: string | null = null;
+$('drop').addEventListener('click', () => {
+  const it = store.selected;
+  if (it) {
+    replacementTarget = it.id;
+    $<HTMLInputElement>('replacementFile').click();
+  } else {
+    $<HTMLInputElement>('files').click();
+  }
+});
+$('replacementFile').addEventListener('cancel', () => (replacementTarget = null));
+$<HTMLInputElement>('replacementFile').addEventListener('change', (e) => {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  const id = replacementTarget ?? store.selected?.id;
+  replacementTarget = null;
+  if (!file || !id) { input.value = ''; return; }
+  void replaceImage(file, id).finally(() => (input.value = ''));
+});
+
+async function replaceImage(file: File, id: string): Promise<void> {
+  if (loading) { toast('上一张图片还在读取，请稍等'); return; }
+  if (!looksLikeImage(file)) { toast('请选择 JPG / PNG / WebP / GIF 图片'); return; }
+  loading = true;
+  setBusy('正在更换图片…');
+  try {
+    const decoded = await decodeForEditing(file);
+    store.replace(id, newItem(baseName(file.name), file, decoded));
+  } catch {
+    toast('图片无法读取，已保留原来的图片');
+  } finally {
+    loading = false;
+    setBusy(null);
+  }
+}
 
 // Fix (B8): handle drops anywhere on the page. v16 only listened on the upload
 // box, so dropping elsewhere made the browser open the file and lose all work.
@@ -192,6 +249,7 @@ window.addEventListener('dragenter', (e) => {
   dragDepth++;
   overlay.hidden = false;
   $('drop').classList.add('dragging');
+  $('previewBg').classList.add('dragging');
 });
 window.addEventListener('dragover', (e) => {
   e.preventDefault();
@@ -202,6 +260,7 @@ window.addEventListener('dragleave', () => {
   if (!dragDepth) {
     overlay.hidden = true;
     $('drop').classList.remove('dragging');
+    $('previewBg').classList.remove('dragging');
   }
 });
 window.addEventListener('drop', (e) => {
@@ -209,6 +268,7 @@ window.addEventListener('drop', (e) => {
   dragDepth = 0;
   overlay.hidden = true;
   $('drop').classList.remove('dragging');
+  $('previewBg').classList.remove('dragging');
   if (e.dataTransfer?.files.length) void loadFiles(e.dataTransfer.files);
 });
 // Edge Super Drag guard (v16): internal drags never start.
@@ -299,7 +359,7 @@ $('clearAll').addEventListener('click', () => {
   const real = store.items.filter((i) => !i.isDemo).length;
   if (real && !confirm(`清空全部 ${real} 张图片？本机自动保存的内容也会一起删除。`)) return;
   store.clear();
-  addDemo();
+  $('emptyUpload').focus();
 });
 
 // ---------- autosave ----------
@@ -380,12 +440,12 @@ async function restore(): Promise<void> {
   } finally {
     setBusy(null);
   }
-  if (!store.items.length) addDemo();
 }
 
 initSettingsSheet();
 
 controls.syncGlobals();
+controls.syncItem();
 syncHeader();
 void restore().finally(() => {
   restoring = false;

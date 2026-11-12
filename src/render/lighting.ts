@@ -85,10 +85,8 @@ export const ACRYLIC_LIGHT = {
   radius: 9,
   /** width of the clear bevel border in design px */
   border: 22,
-  /** thin dark keyline around the printed main art (real 曲绘亚克力) */
-  keyline: { width: 4.5, color: 'rgba(26,20,36,0.88)' },
-  /** frame band behind the main art: blur radius (design px) and a darkening glaze */
-  band: { blur: 2.5, dim: 'rgba(18,14,28,0.34)', dimCutout: 'rgba(18,14,28,0.22)' },
+  /** Frame detail is softened; its brightness and the print outline are per-image controls. */
+  band: { blur: 2.5 },
   groundShadow: { rgb: '40,56,76', alpha: [0.02, 0.09] as AB, blur: [12, 26] as AB, offsetY: 8, offsetX: 3, squash: 0.12, radiusK: 0.5, contact: [0.03, 0.06] as AB },
   backSheet: { thicknessK: 0.5, minThickness: 4, fill: 'rgba(214,232,240,.42)', edge: 'rgba(255,255,255,.75)', low: 'rgba(96,128,150,.22)' },
   /** clear body tint under everything */
@@ -102,7 +100,7 @@ export const ACRYLIC_LIGHT = {
   },
   sheen: { alpha: [0.1, 0.22] as AB, stops: [[0, 0.8], [0.14, 1], [0.27, 0.25], [0.42, 0]] as const },
   gloss: { alpha: 1.2, stops: [[0.16, 0], [0.25, 0.55], [0.3, 0.9], [0.36, 0.4], [0.46, 0]] as const },
-  hole: { wall: 5, wallColor: 'rgba(255,255,255,.92)', outline: 'rgba(80,110,135,.45)', glint: 'rgba(255,255,255,1)' },
+  hole: { wall: 3, wallColor: 'rgba(255,255,255,.88)', outline: 'rgba(134,165,181,.16)', glint: 'rgba(255,255,255,.95)' },
 } as const;
 
 const lin = (ab: AB, t: number) => ab[0] + ab[1] * t;
@@ -369,7 +367,7 @@ export function acrylicHole(ctx: Ctx, hx: number, hy: number, hr: number): void 
   ctx.beginPath();
   ctx.arc(hx, hy, hr + H.wall + 0.6, 0, Math.PI * 2);
   ctx.strokeStyle = H.outline;
-  ctx.lineWidth = 1.2;
+  ctx.lineWidth = 0.85;
   ctx.stroke();
   ctx.beginPath();
   ctx.arc(hx, hy, hr + H.wall * 0.55, 1.05 * Math.PI, 1.55 * Math.PI);

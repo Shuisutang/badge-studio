@@ -29,6 +29,10 @@ export const DEFAULT_ITEM: Readonly<ItemSettings> = Object.freeze({
   rotation: 0,
   artSize: 100,
   acrylicHole: true,
+  acrylicOutlineWidth: 1.5,
+  acrylicOutlineColor: '#627A8A',
+  acrylicOutlineOpacity: 24,
+  acrylicBackgroundBrightness: 8,
   overlayMode: 'auto',
   overlayCustom: '#C9D8EA',
   fit: 'cover',
@@ -42,6 +46,9 @@ export const DEFAULT_ITEM: Readonly<ItemSettings> = Object.freeze({
 export const RANGES = {
   rotation: [-30, 30],
   artSize: [65, 110],
+  acrylicOutlineWidth: [0, 10],
+  acrylicOutlineOpacity: [0, 100],
+  acrylicBackgroundBrightness: [-80, 80],
   zoom: [75, 180],
   offsetX: [-100, 100],
   offsetY: [-100, 100],
@@ -94,6 +101,10 @@ export function sanitizeItemSettings(raw: unknown): ItemSettings {
     rotation: Math.round(num(r.rotation, d.rotation, RANGES.rotation)),
     artSize: Math.round(num(r.artSize, d.artSize, RANGES.artSize)),
     acrylicHole: typeof r.acrylicHole === 'boolean' ? r.acrylicHole : d.acrylicHole,
+    acrylicOutlineWidth: num(r.acrylicOutlineWidth, d.acrylicOutlineWidth, RANGES.acrylicOutlineWidth),
+    acrylicOutlineColor: hex(r.acrylicOutlineColor, d.acrylicOutlineColor),
+    acrylicOutlineOpacity: num(r.acrylicOutlineOpacity, d.acrylicOutlineOpacity, RANGES.acrylicOutlineOpacity),
+    acrylicBackgroundBrightness: num(r.acrylicBackgroundBrightness, d.acrylicBackgroundBrightness, RANGES.acrylicBackgroundBrightness),
     overlayMode: oneOf<OverlayMode>(r.overlayMode, ['auto', 'custom', 'white', 'black'], d.overlayMode),
     overlayCustom: hex(r.overlayCustom, d.overlayCustom),
     fit: oneOf<FitMode>(r.fit, ['cover', 'contain'], d.fit),
@@ -133,5 +144,5 @@ export function sanitizeGlobals(raw: unknown): GlobalSettings {
 }
 
 /** Per-image composition fields that "apply to all" copies. Offsets and colour stay per image. */
-export const SHARED_STYLE_KEYS = ['style', 'rotation', 'artSize', 'acrylicHole', 'fit', 'zoom'] as const satisfies readonly (keyof ItemSettings)[];
+export const SHARED_STYLE_KEYS = ['style', 'rotation', 'artSize', 'acrylicHole', 'acrylicOutlineWidth', 'acrylicOutlineColor', 'acrylicOutlineOpacity', 'acrylicBackgroundBrightness', 'fit', 'zoom'] as const satisfies readonly (keyof ItemSettings)[];
 

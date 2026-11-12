@@ -60,6 +60,18 @@ describe('targetSize', () => {
 });
 
 describe('sanitize (restored / imported data)', () => {
+  it('restores older acrylic settings and bounds the new appearance controls', () => {
+    expect(sanitizeItemSettings({ style: 'acrylic' })).toMatchObject({
+      acrylicOutlineWidth: DEFAULT_ITEM.acrylicOutlineWidth,
+      acrylicOutlineColor: DEFAULT_ITEM.acrylicOutlineColor,
+      acrylicOutlineOpacity: DEFAULT_ITEM.acrylicOutlineOpacity,
+      acrylicBackgroundBrightness: DEFAULT_ITEM.acrylicBackgroundBrightness,
+    });
+    expect(sanitizeItemSettings({ acrylicOutlineWidth: -5, acrylicOutlineColor: 'red', acrylicOutlineOpacity: 130, acrylicBackgroundBrightness: -200 })).toMatchObject({
+      acrylicOutlineWidth: 0, acrylicOutlineColor: DEFAULT_ITEM.acrylicOutlineColor,
+      acrylicOutlineOpacity: 100, acrylicBackgroundBrightness: -80,
+    });
+  });
   it('fills defaults and clamps', () => {
     expect(sanitizeItemSettings(null)).toEqual(DEFAULT_ITEM);
     const s = sanitizeItemSettings({ style: 'metal', rotation: 99, artSize: '80', overlayCustom: 'red', zoom: NaN });

@@ -68,6 +68,16 @@ export class Store {
     this.emit({ kind: 'list' });
   }
 
+  /** Replace only the source; keep gallery order, identity and current editing settings. */
+  replace(id: string, replacement: BadgeItem): void {
+    const idx = this.items.findIndex((i) => i.id === id);
+    const previous = this.items[idx];
+    if (!previous) { releaseItem(replacement); return; }
+    this.items[idx] = { ...replacement, id, settings: previous.settings, version: previous.version + 1 };
+    releaseItem(previous);
+    this.emit({ kind: 'list' });
+  }
+
   remove(id: string): void {
     const idx = this.items.findIndex((i) => i.id === id);
     if (idx < 0) return;

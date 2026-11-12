@@ -86,6 +86,7 @@ for (const c of CASES) {
     // new
     await openApp(page);
     if (c.img) await upload(page, [c.img]);
+    else await page.locator('#loadDemo').click();
     await applyCase(page, c, false);
     const b = Buffer.from(await grab(page), 'base64');
     expect(b.length).toBe(a.length);

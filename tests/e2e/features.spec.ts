@@ -37,7 +37,8 @@ test('autosave restores images and per-image settings after reload', async ({ pa
   await expect(page.locator('#gloss-v')).toHaveText('33%');
   await page.on('dialog', (d) => void d.accept());
   await page.locator('#clearAll').click();
-  await expect(page.locator('.filename')).toHaveText(['示例插画']);
+  await expect(page.locator('.tile')).toHaveCount(0);
+  await expect(page.locator('#emptyUpload')).toBeVisible();
 });
 
 test('zip export has every badge plus the sheet', async ({ page }) => {
@@ -68,7 +69,8 @@ test('export list: exclude items from sheet and zip, delete current, remove all'
   await expect(page.locator('.filename')).toHaveText(['green', 'blue']);
   page.on('dialog', (dl) => void dl.accept());
   await page.locator('#clearAll').click();
-  await expect(page.locator('.filename')).toHaveText(['示例插画']);
+  await expect(page.locator('.tile')).toHaveCount(0);
+  await expect(page.locator('#emptyUpload')).toBeVisible();
 });
 
 test('Alt+arrow reorders from the keyboard', async ({ page }) => {

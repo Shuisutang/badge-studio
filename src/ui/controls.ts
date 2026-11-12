@@ -10,7 +10,7 @@ import { guardRotationSlider } from './rotation';
 const STYLE_HINTS: Record<ItemSettings['style'], string> = {
   rounded: '圆角马口铁吧唧：微微鼓起的面，左上斜向柔光，边缘包边变暗。',
   square: '直角方吧唧：平整印刷面，金属反光包边，柔和投影。',
-  acrylic: '厚亚克力：透明厚边透出画面边缘，白色/彩虹边缘反光，左下白色圆孔。',
+  acrylic: '厚亚克力：清透板材、柔和边缘反光；描边、画外背景和左下圆孔均可调整。',
 };
 
 type NumKey<T> = { [K in keyof T]: T[K] extends number ? K : never }[keyof T];
@@ -87,6 +87,18 @@ export class Controls {
     $<HTMLInputElement>('acrylicHole').addEventListener('change', (e) =>
       this.patchItem({ acrylicHole: (e.target as HTMLInputElement).checked }),
     );
+    const outlineColor = $<HTMLInputElement>('acrylicOutlineColor');
+    outlineColor.addEventListener('input', () => {
+      $('acrylicOutlineColor-v').textContent = outlineColor.value.toUpperCase();
+      this.patchItem({ acrylicOutlineColor: outlineColor.value.toUpperCase() }, true);
+    });
+    outlineColor.addEventListener('change', () => this.patchItem({ acrylicOutlineColor: outlineColor.value.toUpperCase() }));
+    $('resetAcrylic').addEventListener('click', () => this.patchItem({
+      acrylicOutlineWidth: DEFAULT_ITEM.acrylicOutlineWidth,
+      acrylicOutlineColor: DEFAULT_ITEM.acrylicOutlineColor,
+      acrylicOutlineOpacity: DEFAULT_ITEM.acrylicOutlineOpacity,
+      acrylicBackgroundBrightness: DEFAULT_ITEM.acrylicBackgroundBrightness,
+    }));
     document.querySelectorAll<HTMLButtonElement>('button[data-overlay]').forEach((b) =>
       b.addEventListener('click', () => this.patchItem({ overlayMode: b.dataset.overlay as OverlayMode })),
     );
@@ -152,9 +164,10 @@ export class Controls {
   syncItem(): void {
     const it = this.item;
     const disabled = !it;
-    for (const id of ['artSize', 'zoom', 'offsetX', 'offsetY', 'overlayColor', 'acrylicHole', 'applyAll', 'resetCrop', 'resetItem'])
+    for (const id of ['artSize', 'zoom', 'offsetX', 'offsetY', 'overlayColor', 'acrylicHole', 'applyAll', 'resetCrop', 'resetItem', 'rotation', 'resetRotation'])
       ($(id) as HTMLInputElement).disabled = disabled;
     document.querySelectorAll<HTMLButtonElement>('[data-style],[data-fit]').forEach((b) => (b.disabled = disabled));
+    document.querySelectorAll<HTMLInputElement>('input[data-item],#acrylicOutlineColor').forEach((i) => (i.disabled = disabled));
     if (!it) return;
     const st = it.settings;
     document.querySelectorAll<HTMLButtonElement>('[data-style]').forEach((b) => {
@@ -179,13 +192,16 @@ export class Controls {
       : st.rotation
         ? `直角和亚克力不旋转（切回圆角会恢复 ${signedDeg(st.rotation)}）`
         : '直角方吧唧和亚克力不使用旋转';
-    for (const k of ['artSize', 'zoom', 'offsetX', 'offsetY'] as const) {
-      const input = $<HTMLInputElement>(k);
+    for (const input of document.querySelectorAll<HTMLInputElement>('input[data-item]')) {
+      const k = input.dataset.item as NumKey<ItemSettings>;
       input.value = String(st[k]);
-      $(k + '-v').textContent = fmt(input, st[k]);
+      $(input.id + '-v').textContent = fmt(input, st[k]);
     }
     $('acrylicHoleRow').hidden = st.style !== 'acrylic';
+    $('acrylicAppearance').hidden = st.style !== 'acrylic';
     $<HTMLInputElement>('acrylicHole').checked = st.acrylicHole;
+    $<HTMLInputElement>('acrylicOutlineColor').value = st.acrylicOutlineColor.toLowerCase();
+    $('acrylicOutlineColor-v').textContent = st.acrylicOutlineColor;
     ($('radius') as HTMLInputElement).disabled = st.style !== 'rounded';
     $('styleHint').textContent = STYLE_HINTS[st.style];
     const hex = rgbToHex(overlayTint(st, it.colors));

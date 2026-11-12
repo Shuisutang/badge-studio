@@ -139,6 +139,7 @@ test('smaller centre panel: tint reaches the panel edge (no untinted halo)', asy
 test('controls are grouped: primary visible, advanced folded by default', async ({ page }) => {
   await page.goto('./');
   await page.waitForSelector('html[data-ready="1"]');
+  await upload(page, ['square.png']);
   await expect(page.locator('[data-style="rounded"]')).toBeVisible();
   await expect(page.locator('#rotation')).toBeVisible();
   await expect(page.locator('#artSize')).toBeVisible();

@@ -18,7 +18,10 @@ export default defineConfig({
   use: {
     baseURL: live ?? 'http://localhost:4173/badge-studio/',
     acceptDownloads: true,
-    launchOptions: executablePath ? { executablePath } : {},
+    // Pixel probes can otherwise migrate Canvas 2D from GPU to CPU mid-test,
+    // changing blur/shadow rasterization even when every setting is restored.
+    // Keep the 2D backend fixed; WebGL remains available to the 3D checks.
+    launchOptions: { ...(executablePath ? { executablePath } : {}), args: ['--disable-accelerated-2d-canvas'] },
     trace: 'retain-on-failure',
   },
   projects: [

@@ -42,6 +42,7 @@ function open(): Promise<IDBDatabase> {
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 const db = () => (dbPromise ??= open());
+let persistedBlobs = new Map<string, Blob>();
 
 function done(tx: IDBTransaction): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -61,7 +62,7 @@ function keys(d: IDBDatabase, store: string): Promise<Set<string>> {
 
 /**
  * Write the current state. Image blobs live in their own store and are written
- * once per image, so moving a slider only rewrites a few small records.
+ * only when the source changes, so moving a slider only rewrites small records.
  */
 export async function save(items: SavedItem[], blobs: Map<string, Blob>, meta: SavedMeta): Promise<void> {
   const d = await db();
@@ -76,11 +77,12 @@ export async function save(items: SavedItem[], blobs: Map<string, Blob>, meta: S
   for (const it of items) {
     const blob = blobs.get(it.id);
     if (!blob) continue;
-    if (!knownBlobs.has(it.id)) blobStore.put(blob, it.id);
+    if (!knownBlobs.has(it.id) || persistedBlobs.get(it.id) !== blob) blobStore.put(blob, it.id);
     itemStore.put(it, it.id);
   }
   tx.objectStore(META).put(meta, 'meta');
   await done(tx);
+  persistedBlobs = new Map(blobs);
 }
 
 export async function load(): Promise<{ items: RestoredItem[]; meta: SavedMeta | null }> {
@@ -96,6 +98,7 @@ export async function load(): Promise<{ items: RestoredItem[]; meta: SavedMeta |
     const b = (blobsReq.result as unknown[])[i];
     if (b instanceof Blob) blobMap.set(k, b);
   });
+  persistedBlobs = new Map(blobMap);
   const items: RestoredItem[] = ((itemsReq.result as SavedItem[]) ?? [])
     .filter((i) => i && typeof i.id === 'string' && blobMap.has(i.id))
     .map((i) => ({
