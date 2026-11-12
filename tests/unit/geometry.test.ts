@@ -49,6 +49,14 @@ describe('artPanelGeometry', () => {
     expect(artPanelGeometry('square', 20, 100, box, 1).deg).toBe(0);
     expect(artPanelGeometry('acrylic', -30, 100, box, 0).deg).toBe(0);
   });
+  it('zoom below 100 shrinks the panel like art size, while zooming in keeps its boundary', () => {
+    for (const style of ['rounded', 'square', 'acrylic'] as const) {
+      expect(artPanelGeometry(style, -12, 100, box, 40, 724, 75))
+        .toEqual(artPanelGeometry(style, -12, 75, box, 40, 724));
+      expect(artPanelGeometry(style, -12, 100, box, 40, 724, 150))
+        .toEqual(artPanelGeometry(style, -12, 100, box, 40, 724));
+    }
+  });
   it('hole centre matches the official-proportion probe', () => {
     const h = acrylicHoleCenter(960);
     expect([h.x, h.y]).toEqual([174, 770]);

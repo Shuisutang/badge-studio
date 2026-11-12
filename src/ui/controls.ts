@@ -3,7 +3,8 @@ import { LOOK_PRESETS, matchPreset } from '../model/presets';
 import { DEFAULT_ITEM } from '../model/defaults';
 import type { Store } from '../model/store';
 import type { BadgeItem, GlobalSettings, ItemSettings, MarkColorMode, MarkMode, OverlayMode, PreviewBg } from '../model/types';
-import { BADGE_FACE, panRange } from '../render/geometry';
+import { ACRYLIC_ART_BASE, ACRYLIC_FACE, BADGE_FACE, artPanelGeometry, panRange } from '../render/geometry';
+import { ACRYLIC_LIGHT } from '../render/lighting';
 import { $ } from './dom';
 import { guardRotationSlider } from './rotation';
 
@@ -218,9 +219,16 @@ export class Controls {
   }
 
   private syncPanHint(it: BadgeItem): void {
-    const ring = this.store.globals.ring;
-    const box = { x: 0, y: 0, w: BADGE_FACE.w - 2 * ring, h: BADGE_FACE.h - 2 * ring };
-    const r = panRange(it.preview.width, it.preview.height, box, it.settings);
+    const acrylic = it.settings.style === 'acrylic';
+    const face = acrylic ? ACRYLIC_FACE : BADGE_FACE;
+    const ring = acrylic ? ACRYLIC_LIGHT.border : this.store.globals.ring;
+    const box = { x: 0, y: 0, w: face.w - 2 * ring, h: face.h - 2 * ring };
+    const panel = artPanelGeometry(it.settings.style, it.settings.rotation,
+      it.settings.artSize * (acrylic ? ACRYLIC_ART_BASE : 1), box, 0,
+      acrylic ? face.w - 8 : face.w, it.settings.zoom);
+    const r = panRange(it.preview.width, it.preview.height,
+      { x: 0, y: 0, w: panel.panelW, h: panel.panelH },
+      { ...it.settings, zoom: Math.max(100, it.settings.zoom) });
     const canX = r.x > 0.5;
     const canY = r.y > 0.5;
     $<HTMLInputElement>('offsetX').disabled = !canX;

@@ -52,7 +52,7 @@ function drawImageFit(ctx: Ctx, input: RenderInput, x: number, y: number, w: num
   const p =
     layer === 'outer'
       ? { fit: 'cover' as const, zoom: Math.max(100, settings.zoom), offsetX: settings.offsetX, offsetY: settings.offsetY }
-      : settings;
+      : { ...settings, zoom: Math.max(100, settings.zoom) };
   const r = fitRect(src.width, src.height, { x, y, w, h }, p, zoomMul);
   if (!r) return;
   ctx.drawImage(src.source, r.x, r.y, r.w, r.h);
@@ -102,7 +102,7 @@ function drawCopyright(ctx: Ctx, input: RenderInput, x: number, y: number, w: nu
 }
 
 function panelSubpath(ctx: Ctx, s: ItemSettings, box: Rect, r: number, outerLimit: number): void {
-  const g = artPanelGeometry(s.style, s.rotation, s.artSize, box, r, outerLimit);
+  const g = artPanelGeometry(s.style, s.rotation, s.artSize, box, r, outerLimit, s.zoom);
   ctx.save();
   ctx.translate(g.cx, g.cy);
   ctx.rotate((g.deg * Math.PI) / 180);
@@ -113,7 +113,7 @@ function panelSubpath(ctx: Ctx, s: ItemSettings, box: Rect, r: number, outerLimi
 /** The centre artwork. Only this panel rotates; the printed background stays level. */
 function drawArtPanel(ctx: Ctx, input: RenderInput, box: Rect, r: number, opts: { noShade?: boolean; noTiltShadow?: boolean; outerLimit: number; outline?: { width: number; color: string; scale: number }; sizeK?: number }): void {
   const s = input.settings;
-  const { deg, panelW, panelH, cx, cy, corner } = artPanelGeometry(s.style, s.rotation, s.artSize * (opts.sizeK ?? 1), box, r, opts.outerLimit);
+  const { deg, panelW, panelH, cx, cy, corner } = artPanelGeometry(s.style, s.rotation, s.artSize * (opts.sizeK ?? 1), box, r, opts.outerLimit, s.zoom);
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate((deg * Math.PI) / 180);
@@ -270,7 +270,7 @@ function drawAcrylic(ctx: Ctx, input: RenderInput, dim: number): void {
   const cutout = hasTransparency(input.src.source);
   if (cutout) {
     const box = { x: x + rim, y: y + rim, w: w - rim * 2, h: h - rim * 2 };
-    const pg = artPanelGeometry(s.style, s.rotation, s.artSize * ACRYLIC_ART_BASE, box, 0, w - 8);
+    const pg = artPanelGeometry(s.style, s.rotation, s.artSize * ACRYLIC_ART_BASE, box, 0, w - 8, s.zoom);
     ctx.save();
     ctx.translate(pg.cx, pg.cy);
     ctx.rotate((pg.deg * Math.PI) / 180);

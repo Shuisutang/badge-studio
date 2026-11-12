@@ -48,6 +48,31 @@ test('B3 "contain" leaves no transparent holes in the face', async ({ page }) =>
   for (const [x, y] of [[480, 150], [480, 300], [140, 480], [480, 780]] as const) expect((await pixel(page, x, y))[3]).toBe(255);
 });
 
+for (const style of ['rounded', 'square', 'acrylic'] as const) {
+  test(`zooming out shrinks the complete main panel like art size: ${style}`, async ({ page }) => {
+    await upload(page, ['square.png']);
+    await page.locator(`[data-style="${style}"]`).click();
+    if (style === 'rounded') await setRange(page, 'rotation', -12);
+    const fingerprints = () => page.evaluate(() => {
+      const hash = (canvas: HTMLCanvasElement) => {
+        const data = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data;
+        let value = 0;
+        for (let i = 0; i < data.length; i += 7) value = (value * 31 + data[i]!) | 0;
+        return value;
+      };
+      const input = window.__badge!.preview3d.input()!;
+      return [hash(document.getElementById('preview') as HTMLCanvasElement), hash(input.print), input.inkMask ? hash(input.inkMask) : null];
+    });
+    await setRange(page, 'zoom', 75);
+    const zoomedOut = await fingerprints();
+    await expect(page.locator('#offsetX')).toBeDisabled();
+    await expect(page.locator('#offsetY')).toBeDisabled();
+    await setRange(page, 'zoom', 100);
+    await setRange(page, 'artSize', 75);
+    expect(await fingerprints()).toEqual(zoomedOut);
+  });
+}
+
 test('B4 transparent PNG prints on white stock (rounded), stays clear on acrylic', async ({ page }) => {
   await upload(page, ['transparent.png']);
   const p = await pixel(page, 200, 700);

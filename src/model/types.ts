@@ -26,7 +26,7 @@ export interface ItemSettings {
   /** #RRGGBB used when overlayMode === 'custom'. */
   overlayCustom: string;
   fit: FitMode;
-  /** 75 … 180 (%) */
+  /** 75 … 180 (%): below 100 shrinks the panel, above 100 zooms within its crop. */
   zoom: number;
   /** -100 … 100, fraction of the available pan range in that axis. */
   offsetX: number;

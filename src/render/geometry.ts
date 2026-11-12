@@ -56,6 +56,7 @@ export interface PanelGeometry {
 /**
  * The centre artwork panel. Only the rounded badge rotates; when tilted at ≤100%
  * size it auto-shrinks so the four corners stay inside the product face.
+ * Zoom below 100% shrinks the complete panel; zoom above 100% only crops its image.
  */
 export function artPanelGeometry(
   style: BadgeStyle,
@@ -64,9 +65,10 @@ export function artPanelGeometry(
   box: Rect,
   r: number,
   outerLimit?: number,
+  zoom = 100,
 ): PanelGeometry {
   const deg = style === 'rounded' ? rotation || 0 : 0;
-  const size = artSize / 100;
+  const size = (artSize / 100) * Math.min(1, zoom / 100);
   const absAngle = (Math.abs(deg) * Math.PI) / 180;
   const bboxFactor = Math.abs(Math.cos(absAngle)) + Math.abs(Math.sin(absAngle));
   const limit = outerLimit || box.w;
