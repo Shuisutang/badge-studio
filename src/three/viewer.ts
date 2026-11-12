@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { ACRYLIC_FACE, ACRYLIC_HOLE, BADGE_FACE, DESIGN } from '../render/geometry';
 import { ACRYLIC_LIGHT } from '../render/lighting';
-import { faceUv, projectToRoundedRect, roundedRectSdf, tinHeight, type TinShape } from './geometry3d';
+import { faceUv, projectToRoundedRect, roundedRectSdf, tinHeight, tinWallUv, type TinShape } from './geometry3d';
 import { roundedShape } from './modelGeometry';
 import { createTinBack } from './tinBack';
 
@@ -199,18 +199,16 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
     const side = 0.05; // rolled wall depth behind the rim
     const face = new THREE.Mesh(geo, mat);
     face.position.z = side / 2;
-    // wall + back: extruded outline; the print streaks over the wall like a real roll-over
+    // The printed paper/film wraps the entire shell side, including square tins.
     const wallGeo = new THREE.ExtrudeGeometry(roundedShape(hx, hy, shape.r), { depth: side, bevelEnabled: false, curveSegments: 24 });
     wallGeo.translate(0, 0, -side / 2);
     const wuv = wallGeo.attributes.uv as THREE.BufferAttribute;
     const wpos = wallGeo.attributes.position as THREE.BufferAttribute;
     for (let i = 0; i < wpos.count; i++) {
-      const [u, v] = faceUv(wpos.getX(i), wpos.getY(i), hx, hy, f, DESIGN);
+      const [u, v] = tinWallUv(wpos.getX(i), wpos.getY(i), wpos.getZ(i), shape, side, f, DESIGN);
       wuv.setXY(i, u, v);
     }
-    const wallMat = sq
-      ? new THREE.MeshStandardMaterial({ color: 0xdfe4ea, metalness: 1, roughness: 0.22 }) // reflective metal edge
-      : new THREE.MeshPhysicalMaterial({ map, roughness: 0.4, clearcoat: 0.8, clearcoatRoughness: 0.2, color: 0xe6e6e6 });
+    const wallMat = mat.clone();
     // Omit the solid extrusion caps: the separate recessed back must remain visible.
     const sideGroups = wallGeo.groups.filter((g) => g.materialIndex === 1);
     wallGeo.clearGroups();

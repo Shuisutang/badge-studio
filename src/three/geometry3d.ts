@@ -69,3 +69,19 @@ export function faceUv(px: number, py: number, hx: number, hy: number, face: { x
   const uy = (face.y + face.h * (0.5 + (fy - 0.5) * k)) / design;
   return [ux, 1 - uy];
 }
+
+/**
+ * Fold a strip of printed artwork around the shell. At the front seam the UV
+ * matches the face exactly; toward the back it unfolds an inset edge strip.
+ * Imported art has no separate bleed sheet, so this mirrors the nearby print
+ * across the trim instead of sampling transparent pixels outside the face.
+ */
+export function tinWallUv(px: number, py: number, pz: number, shape: Pick<TinShape, 'hx' | 'hy' | 'r'>, depth: number, face: { x: number; y: number; w: number; h: number }, design = 960): [number, number] {
+  const cx = Math.max(-shape.hx + shape.r, Math.min(shape.hx - shape.r, px));
+  const cy = Math.max(-shape.hy + shape.r, Math.min(shape.hy - shape.r, py));
+  const dx = px - cx;
+  const dy = py - cy;
+  const length = Math.hypot(dx, dy) || 1;
+  const fold = Math.max(0, Math.min(depth, depth / 2 - pz));
+  return faceUv(px - dx / length * fold, py - dy / length * fold, shape.hx, shape.hy, face, design);
+}
