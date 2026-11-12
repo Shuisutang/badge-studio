@@ -72,6 +72,65 @@
               <button class="style-option" data-style="acrylic" type="button" aria-pressed="false"><span class="ico ico-acrylic" aria-hidden="true"></span>亚克力牌</button>
             </div>
             <p id="styleHint" class="note">圆角塑封：顶部细长高光，底部柔雾投影。</p>
+            <section class="copyright-control" aria-labelledby="copyrightTitle">
+              <div class="copyright-heading">
+                <h3 id="copyrightTitle">版权标 <small>所有图片</small></h3>
+                <label class="checkline"><input id="copyrightEnabled" type="checkbox" />显示版权标</label>
+              </div>
+              <div id="markSettings" hidden>
+                <div class="label" id="markPositionLabel">版权标位置</div>
+                <div class="mark-positions" role="group" aria-labelledby="markPositionLabel">
+                  <button type="button" class="mode" data-mark-position="top-left" aria-pressed="false">左上角</button>
+                  <button type="button" class="mode" data-mark-position="top-right" aria-pressed="false">右上角</button>
+                  <button type="button" class="mode" data-mark-position="bottom-left" aria-pressed="false">左下角</button>
+                  <button type="button" class="mode active" data-mark-position="bottom-right" aria-pressed="true">右下角</button>
+                </div>
+                <details class="sub" id="d-mark">
+                  <summary>内容与细节</summary>
+                  <div class="label"><label for="markMode">版权标类型</label></div>
+                  <select id="markMode">
+                    <option value="text">文字</option>
+                    <option value="logo">上传透明 PNG Logo</option>
+                  </select>
+                  <div id="markTextSettings">
+                    <div class="label"><label for="markText">版权文字</label></div>
+                    <input id="markText" class="text-field" type="text" value="© YOUR BRAND" maxlength="90" placeholder="如 © 2026 ABC" />
+                    <div class="label"><label for="markSize">文字大小</label> <output id="markSize-v">19</output></div>
+                    <input id="markSize" type="range" min="10" max="38" value="19" data-global="markSize" />
+                    <div class="label"><label for="markColorMode">文字颜色</label></div>
+                    <div class="splits">
+                      <select id="markColorMode">
+                        <option value="white">白色</option>
+                        <option value="black">黑色</option>
+                        <option value="custom">自定义</option>
+                      </select>
+                      <input id="markColor" type="color" value="#ffffff" aria-label="自定义文字颜色" />
+                    </div>
+                  </div>
+                  <div id="markLogoSettings" hidden>
+                    <div class="label">选择 Logo 文件</div>
+                    <label class="file-pick" for="markLogo">＋ 上传 PNG / WebP 图片</label>
+                    <input id="markLogo" type="file" accept="image/png,image/webp,image/jpeg" hidden />
+                    <div class="hint-line"><span id="markLogoName">尚未选择图片</span><button id="clearMarkLogo" type="button" class="inline-link">移除</button></div>
+                    <div class="label"><label for="markLogoWidth">Logo 宽度</label> <output id="markLogoWidth-v">100</output></div>
+                    <input id="markLogoWidth" type="range" min="25" max="200" value="100" data-global="markLogoWidth" />
+                  </div>
+                  <div class="label"><label for="markOpacity">不透明度</label> <output id="markOpacity-v">90%</output></div>
+                  <input id="markOpacity" type="range" min="0" max="100" value="90" data-global="markOpacity" data-unit="%" />
+                  <div class="splits">
+                    <div>
+                      <div class="label"><label for="markRight" id="markHorizontalLabel">右侧留距</label> <output id="markRight-v">54</output></div>
+                      <input id="markRight" type="range" min="8" max="170" value="54" data-global="markRight" />
+                    </div>
+                    <div>
+                      <div class="label"><label for="markBottom" id="markVerticalLabel">下方留距</label> <output id="markBottom-v">18</output></div>
+                      <input id="markBottom" type="range" min="8" max="150" value="18" data-global="markBottom" />
+                    </div>
+                  </div>
+                  <p class="note">只填写你有权使用的版权文字或品牌标识。</p>
+                </details>
+              </div>
+            </section>
             <div id="rotationControl" class="drag-guard" draggable="false">
               <div class="label"><label for="rotation">主图旋转</label> <output id="rotation-v" for="rotation">0°</output></div>
               <div class="stepper">
@@ -173,52 +232,6 @@
               <div class="label"><label for="shadow">柔和投影</label> <output id="shadow-v">38%</output></div>
               <input id="shadow" type="range" min="0" max="100" value="38" data-global="shadow" data-unit="%" />
               <button type="button" class="btn small wide" id="resetLook">恢复默认外观</button>
-            </details>
-
-            <details class="sub" id="d-mark">
-              <summary>右下角版权标 <small>所有图片</small></summary>
-              <label class="checkline"><input id="copyrightEnabled" type="checkbox" />显示版权标</label>
-              <div class="label"><label for="markMode">版权标类型</label></div>
-              <select id="markMode">
-                <option value="text">文字</option>
-                <option value="logo">上传透明 PNG Logo</option>
-              </select>
-              <div id="markTextSettings">
-                <div class="label"><label for="markText">版权文字</label></div>
-                <input id="markText" class="text-field" type="text" value="© YOUR BRAND" maxlength="90" placeholder="如 © 2026 ABC" />
-                <div class="label"><label for="markSize">文字大小</label> <output id="markSize-v">19</output></div>
-                <input id="markSize" type="range" min="10" max="38" value="19" data-global="markSize" />
-                <div class="label"><label for="markColorMode">文字颜色</label></div>
-                <div class="splits">
-                  <select id="markColorMode">
-                    <option value="white">白色</option>
-                    <option value="black">黑色</option>
-                    <option value="custom">自定义</option>
-                  </select>
-                  <input id="markColor" type="color" value="#ffffff" aria-label="自定义文字颜色" />
-                </div>
-              </div>
-              <div id="markLogoSettings" hidden>
-                <div class="label">选择 Logo 文件</div>
-                <label class="file-pick" for="markLogo">＋ 上传 PNG / WebP 图片</label>
-                <input id="markLogo" type="file" accept="image/png,image/webp,image/jpeg" hidden />
-                <div class="hint-line"><span id="markLogoName">尚未选择图片</span><button id="clearMarkLogo" type="button" class="inline-link">移除</button></div>
-                <div class="label"><label for="markLogoWidth">Logo 宽度</label> <output id="markLogoWidth-v">100</output></div>
-                <input id="markLogoWidth" type="range" min="25" max="200" value="100" data-global="markLogoWidth" />
-              </div>
-              <div class="label"><label for="markOpacity">不透明度</label> <output id="markOpacity-v">90%</output></div>
-              <input id="markOpacity" type="range" min="0" max="100" value="90" data-global="markOpacity" data-unit="%" />
-              <div class="splits">
-                <div>
-                  <div class="label"><label for="markRight">右侧留距</label> <output id="markRight-v">54</output></div>
-                  <input id="markRight" type="range" min="8" max="170" value="54" data-global="markRight" />
-                </div>
-                <div>
-                  <div class="label"><label for="markBottom">下方留距</label> <output id="markBottom-v">18</output></div>
-                  <input id="markBottom" type="range" min="8" max="150" value="18" data-global="markBottom" />
-                </div>
-              </div>
-              <p class="note">只填写你有权使用的版权文字或品牌标识。</p>
             </details>
           </section>
         </div>

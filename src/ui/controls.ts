@@ -2,7 +2,7 @@ import { automaticTint, overlayTint, rgbToHex } from '../color/color';
 import { LOOK_PRESETS, matchPreset } from '../model/presets';
 import { DEFAULT_ITEM } from '../model/defaults';
 import type { Store } from '../model/store';
-import type { BadgeItem, GlobalSettings, ItemSettings, MarkColorMode, MarkMode, OverlayMode, PreviewBg } from '../model/types';
+import type { BadgeItem, GlobalSettings, ItemSettings, MarkColorMode, MarkMode, MarkPosition, OverlayMode, PreviewBg } from '../model/types';
 import { ACRYLIC_ART_BASE, ACRYLIC_FACE, BADGE_FACE, artPanelGeometry, panRange } from '../render/geometry';
 import { ACRYLIC_LIGHT } from '../render/lighting';
 import { $ } from './dom';
@@ -128,6 +128,9 @@ export class Controls {
       $<HTMLInputElement>(id).addEventListener('change', (e) => s.updateGlobals({ [key]: (e.target as HTMLInputElement).checked }));
     check('threeDEnabled', 'threeDEnabled');
     check('copyrightEnabled', 'copyrightEnabled');
+    document.querySelectorAll<HTMLButtonElement>('[data-mark-position]').forEach(b =>
+      b.addEventListener('click', () => s.updateGlobals({ markPosition: b.dataset.markPosition as MarkPosition })),
+    );
     $<HTMLSelectElement>('markMode').addEventListener('change', (e) =>
       s.updateGlobals({ markMode: (e.target as HTMLSelectElement).value as MarkMode }),
     );
@@ -246,6 +249,14 @@ export class Controls {
     }
     $<HTMLInputElement>('threeDEnabled').checked = g.threeDEnabled;
     $<HTMLInputElement>('copyrightEnabled').checked = g.copyrightEnabled;
+    $('markSettings').hidden = !g.copyrightEnabled;
+    document.querySelectorAll<HTMLButtonElement>('[data-mark-position]').forEach(b => {
+      const on = b.dataset.markPosition === g.markPosition;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+    $('markHorizontalLabel').textContent = g.markPosition.endsWith('left') ? '左侧留距' : '右侧留距';
+    $('markVerticalLabel').textContent = g.markPosition.startsWith('top') ? '上方留距' : '下方留距';
     $<HTMLSelectElement>('markMode').value = g.markMode;
     $('markTextSettings').hidden = g.markMode !== 'text';
     $('markLogoSettings').hidden = g.markMode !== 'logo';

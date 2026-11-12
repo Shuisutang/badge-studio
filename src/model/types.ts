@@ -5,6 +5,7 @@ export type OverlayMode = 'auto' | 'custom' | 'white' | 'black';
 export type FitMode = 'cover' | 'contain';
 export type PreviewBg = 'checkers' | 'white' | 'dark';
 export type MarkMode = 'text' | 'logo';
+export type MarkPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 export type MarkColorMode = 'white' | 'black' | 'custom';
 
 /** Settings that belong to one artwork. Switching images never touches another item's values. */
@@ -48,13 +49,16 @@ export interface GlobalSettings {
   shadow: number;
   copyrightEnabled: boolean;
   markMode: MarkMode;
+  markPosition: MarkPosition;
   markText: string;
   markSize: number;
   markColorMode: MarkColorMode;
   markColor: string;
   markLogoWidth: number;
   markOpacity: number;
+  /** Inset from the selected horizontal edge; legacy key retained for saved work. */
   markRight: number;
+  /** Inset from the selected vertical edge; legacy key retained for saved work. */
   markBottom: number;
   bg: PreviewBg;
   resolution: number;

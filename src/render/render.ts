@@ -69,24 +69,26 @@ function drawCopyright(ctx: Ctx, input: RenderInput, x: number, y: number, w: nu
   rr(ctx, x, y, w, h, r);
   ctx.clip();
   ctx.globalAlpha = g.markOpacity / 100;
-  const rightX = x + w - g.markRight;
-  const bottomY = y + h - g.markBottom;
+  const left = g.markPosition.endsWith('left');
+  const top = g.markPosition.startsWith('top');
+  const anchorX = left ? x + g.markRight : x + w - g.markRight;
+  const anchorY = top ? y + g.markBottom : y + h - g.markBottom;
   if (g.markMode === 'logo' && input.mark) {
     const { width: iw, height: ih } = input.mark;
     if (iw > 0 && ih > 0) {
       const ww = g.markLogoWidth;
       const hh = (ww * ih) / iw;
-      ctx.drawImage(input.mark.source, rightX - ww, bottomY - hh, ww, hh);
+      ctx.drawImage(input.mark.source, left ? anchorX : anchorX - ww, top ? anchorY : anchorY - hh, ww, hh);
     }
   } else if (g.markMode === 'text') {
     const raw = String(g.markText || '').replace(/[\r\n\t]+/g, ' ').trim();
     if (raw) {
       let sz = g.markSize;
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'alphabetic';
+      ctx.textAlign = left ? 'left' : 'right';
+      ctx.textBaseline = top ? 'top' : 'alphabetic';
       ctx.font = MARK_FONT(sz);
-      // Fix (B9): the room left of the anchor depends on the right margin.
-      const maxW = Math.max(60, rightX - (x + 24));
+      // Keep long labels inside the face, whichever edge they are anchored to.
+      const maxW = Math.max(60, left ? x + w - 24 - anchorX : anchorX - (x + 24));
       const measured = ctx.measureText(raw).width;
       if (measured > maxW) {
         sz = Math.max(9, (sz * maxW) / measured);
@@ -97,7 +99,7 @@ function drawCopyright(ctx: Ctx, input: RenderInput, x: number, y: number, w: nu
       ctx.shadowColor = g.markColorMode === 'black' ? 'rgba(255,255,255,.22)' : 'rgba(0,0,0,.25)';
       ctx.shadowBlur = 2;
       ctx.shadowOffsetY = 0.5;
-      ctx.fillText(raw, rightX, bottomY);
+      ctx.fillText(raw, anchorX, anchorY);
     }
   }
   ctx.restore();

@@ -1,4 +1,4 @@
-import type { BadgeStyle, FitMode, GlobalSettings, ItemSettings, MarkColorMode, MarkMode, OverlayMode, PreviewBg } from './types';
+import type { BadgeStyle, FitMode, GlobalSettings, ItemSettings, MarkColorMode, MarkMode, MarkPosition, OverlayMode, PreviewBg } from './types';
 
 export const DEFAULT_GLOBALS: Readonly<GlobalSettings> = Object.freeze({
   radius: 84,
@@ -12,6 +12,7 @@ export const DEFAULT_GLOBALS: Readonly<GlobalSettings> = Object.freeze({
   shadow: 38,
   copyrightEnabled: false,
   markMode: 'text',
+  markPosition: 'bottom-right',
   markText: '© YOUR BRAND',
   markSize: 19,
   markColorMode: 'white',
@@ -130,6 +131,7 @@ export function sanitizeGlobals(raw: unknown): GlobalSettings {
     shadow: num(r.shadow, d.shadow, RANGES.shadow),
     copyrightEnabled: typeof r.copyrightEnabled === 'boolean' ? r.copyrightEnabled : d.copyrightEnabled,
     markMode: oneOf<MarkMode>(r.markMode, ['text', 'logo'], d.markMode),
+    markPosition: oneOf<MarkPosition>(r.markPosition, ['top-left', 'top-right', 'bottom-left', 'bottom-right'], d.markPosition),
     markText: typeof r.markText === 'string' ? r.markText.slice(0, 90) : d.markText,
     markSize: num(r.markSize, d.markSize, RANGES.markSize),
     markColorMode: oneOf<MarkColorMode>(r.markColorMode, ['white', 'black', 'custom'], d.markColorMode),

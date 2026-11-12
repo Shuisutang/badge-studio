@@ -60,6 +60,12 @@ describe('targetSize', () => {
 });
 
 describe('sanitize (restored / imported data)', () => {
+  it('keeps old copyright placement and validates corner selection', () => {
+    expect(sanitizeGlobals({ markRight: 72, markBottom: 26 })).toMatchObject({ markPosition: 'bottom-right', markRight: 72, markBottom: 26 });
+    for (const markPosition of ['top-left', 'top-right', 'bottom-left', 'bottom-right'])
+      expect(sanitizeGlobals({ markPosition }).markPosition).toBe(markPosition);
+    expect(sanitizeGlobals({ markPosition: 'outside' }).markPosition).toBe('bottom-right');
+  });
   it('restores older acrylic settings and bounds the new appearance controls', () => {
     expect(sanitizeItemSettings({ style: 'acrylic' })).toMatchObject({
       acrylicOutlineWidth: DEFAULT_ITEM.acrylicOutlineWidth,
