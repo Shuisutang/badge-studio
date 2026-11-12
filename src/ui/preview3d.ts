@@ -4,6 +4,8 @@
  */
 import type { Store } from '../model/store';
 import { renderBadge } from '../render/render';
+import { BADGE_FACE } from '../render/geometry';
+import { TIN_SIDE_DEPTH } from '../three/geometry3d';
 import type { Viewer, ViewerInput } from '../three/viewer';
 import { $, toast } from './dom';
 
@@ -46,16 +48,17 @@ export class Preview3D {
     const g = this.store.globals;
     const small = Math.min(window.innerWidth, window.innerHeight) < 700;
     const dim = small ? 1024 : 2048;
+    const bleed = it.settings.style === 'acrylic' ? 0 : Math.ceil(BADGE_FACE.w * TIN_SIDE_DEPTH) + 3;
     const c = document.createElement('canvas');
     c.width = c.height = dim;
-    renderBadge(c.getContext('2d')!, { src: it.preview, settings: it.settings, colors: it.colors, globals: g, mark: this.store.mark, printOnly: true }, dim);
+    renderBadge(c.getContext('2d')!, { src: it.preview, settings: it.settings, colors: it.colors, globals: g, mark: this.store.mark, printOnly: true, bleed }, dim);
     let sidePrint: HTMLCanvasElement | undefined;
     if (it.settings.style !== 'acrylic' && g.copyrightEnabled) {
       sidePrint = document.createElement('canvas');
       sidePrint.width = sidePrint.height = dim;
       renderBadge(sidePrint.getContext('2d')!, {
         src: it.preview, settings: it.settings, colors: it.colors,
-        globals: { ...g, copyrightEnabled: false }, mark: null, printOnly: true,
+        globals: { ...g, copyrightEnabled: false }, mark: null, printOnly: true, bleed,
       }, dim);
     }
     let inkMask: HTMLCanvasElement | undefined;

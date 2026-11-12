@@ -2,6 +2,7 @@
  * Pure geometry helpers for the 3D preview (no three.js import, unit-tested).
  * World units: the printed face is 1 wide, centred on the origin.
  */
+export const TIN_SIDE_DEPTH = 0.05;
 
 /** Signed distance to a rounded rectangle of half-size (hx, hy) and corner r. Negative inside. */
 export function roundedRectSdf(px: number, py: number, hx: number, hy: number, r: number): number {
@@ -71,10 +72,9 @@ export function faceUv(px: number, py: number, hx: number, hy: number, face: { x
 }
 
 /**
- * Fold a strip of printed artwork around the shell. At the front seam the UV
- * matches the face exactly; toward the back it unfolds an inset edge strip.
- * Imported art has no separate bleed sheet, so this mirrors the nearby print
- * across the trim instead of sampling transparent pixels outside the face.
+ * Unfold the shell onto one continuous print sheet. The front seam shares the
+ * face UV; walking toward the back continues OUTSIDE the trim into real bleed.
+ * UVs never reverse into the front image, which would repeat text at the fold.
  */
 export function tinWallUv(px: number, py: number, pz: number, shape: Pick<TinShape, 'hx' | 'hy' | 'r'>, depth: number, face: { x: number; y: number; w: number; h: number }, design = 960): [number, number] {
   const cx = Math.max(-shape.hx + shape.r, Math.min(shape.hx - shape.r, px));
@@ -83,5 +83,5 @@ export function tinWallUv(px: number, py: number, pz: number, shape: Pick<TinSha
   const dy = py - cy;
   const length = Math.hypot(dx, dy) || 1;
   const fold = Math.max(0, Math.min(depth, depth / 2 - pz));
-  return faceUv(px - dx / length * fold, py - dy / length * fold, shape.hx, shape.hy, face, design);
+  return faceUv(px + dx / length * fold, py + dy / length * fold, shape.hx, shape.hy, face, design);
 }

@@ -4,13 +4,13 @@ export function roundedShape(hx: number, hy: number, r: number): THREE.Shape {
   const s = new THREE.Shape();
   s.moveTo(-hx + r, -hy);
   s.lineTo(hx - r, -hy);
-  s.quadraticCurveTo(hx, -hy, hx, -hy + r);
+  s.absarc(hx - r, -hy + r, r, -Math.PI / 2, 0, false);
   s.lineTo(hx, hy - r);
-  s.quadraticCurveTo(hx, hy, hx - r, hy);
+  s.absarc(hx - r, hy - r, r, 0, Math.PI / 2, false);
   s.lineTo(-hx + r, hy);
-  s.quadraticCurveTo(-hx, hy, -hx, hy - r);
+  s.absarc(-hx + r, hy - r, r, Math.PI / 2, Math.PI, false);
   s.lineTo(-hx, -hy + r);
-  s.quadraticCurveTo(-hx, -hy, -hx + r, -hy);
+  s.absarc(-hx + r, -hy + r, r, Math.PI, Math.PI * 1.5, false);
   return s;
 }
 

@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { faceUv, projectToRoundedRect, roundedRectSdf, tinHeight, tinWallUv } from '../../src/three/geometry3d';
 import { BADGE_FACE } from '../../src/render/geometry';
+import { roundedShape } from '../../src/three/modelGeometry';
 
 describe('3D geometry helpers', () => {
+  it('the shell outline matches the same circular corners as the front mesh', () => {
+    for (const p of roundedShape(0.5, 0.5, 0.1).getPoints(24)) {
+      expect(Math.abs(roundedRectSdf(p.x, p.y, 0.5, 0.5, 0.1))).toBeLessThan(1e-9);
+    }
+  });
   it('sdf is negative inside, zero on the edge, positive outside', () => {
     expect(roundedRectSdf(0, 0, 0.5, 0.5, 0.1)).toBeCloseTo(-0.5);
     expect(roundedRectSdf(0.5, 0, 0.5, 0.5, 0.1)).toBeCloseTo(0);
@@ -29,15 +35,15 @@ describe('3D geometry helpers', () => {
     expect(u1).toBeCloseTo((BADGE_FACE.x + BADGE_FACE.w) / 960);
     expect(v1).toBeCloseTo(1 - (BADGE_FACE.y + BADGE_FACE.h) / 960);
   });
-  it('wrap UVs join the face seam and use a real strip of print across the depth', () => {
+  it('wrap UVs join the face seam and continue outward without mirroring the front', () => {
     const shape = { hx: 0.5, hy: 0.5, r: 0.1 };
     for (const [x, y] of [[0.5, 0.2], [-0.5, 0.2], [0.2, 0.5], [0.2, -0.5], [0.47, 0.47]] as const) {
       expect(tinWallUv(x, y, 0.025, shape, 0.05, BADGE_FACE)).toEqual(faceUv(x, y, 0.5, 0.5, BADGE_FACE));
     }
     const front = tinWallUv(0.5, 0.2, 0.025, shape, 0.05, BADGE_FACE);
     const back = tinWallUv(0.5, 0.2, -0.025, shape, 0.05, BADGE_FACE);
-    expect(back[0]).toBeLessThan(front[0]);
+    expect(back[0]).toBeGreaterThan(front[0]);
     expect(back[1]).toBe(front[1]);
-    expect(back).toEqual(faceUv(0.45, 0.2, 0.5, 0.5, BADGE_FACE));
+    expect(back).toEqual(faceUv(0.55, 0.2, 0.5, 0.5, BADGE_FACE));
   });
 });

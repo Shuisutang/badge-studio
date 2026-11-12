@@ -1,6 +1,38 @@
 import { expect, test } from '@playwright/test';
 import { openApp, upload } from './helpers';
 
+test('tin print reserves continuous source artwork beyond the front trim', async ({ page }) => {
+  await openApp(page, false);
+  const png = await page.evaluate(() => {
+    const c = document.createElement('canvas');
+    c.width = c.height = 1000;
+    const ctx = c.getContext('2d')!;
+    const gradient = ctx.createLinearGradient(0, 0, 1000, 0);
+    gradient.addColorStop(0, '#142800');
+    gradient.addColorStop(1, '#1428ff');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 1000, 1000);
+    return c.toDataURL().split(',')[1]!;
+  });
+  await page.locator('#files').setInputFiles({ name: 'continuous-gradient.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') });
+  await page.waitForFunction(() => window.__badge!.store.items.length === 1);
+  await page.evaluate(() => window.__badge!.store.updateGlobals({ overlayAlpha: 0, outerZoom: 100, copyrightEnabled: false }));
+  for (const style of ['rounded', 'square']) {
+    await page.locator(`[data-style="${style}"]`).click();
+    const samples = await page.evaluate(() => {
+      const print = window.__badge!.preview3d.input()!.print;
+      const ctx = print.getContext('2d')!;
+      return [820, 830, 840, 850, 860, 870].map((x) => Array.from(ctx.getImageData(Math.round(x * print.width / 960), Math.round(470 * print.height / 960), 1, 1).data));
+    });
+    // The 842px trim lies in the middle. New source pixels continue beyond it
+    // with the same direction of colour progression, rather than mirroring back.
+    for (let i = 0; i < samples.length; i++) {
+      expect(samples[i]![3]).toBe(255);
+      if (i > 0) expect(samples[i]![2]).toBeGreaterThan(samples[i - 1]![2]!);
+    }
+  }
+});
+
 test('acrylic print keeps the physical rim clear without erasing the printed frame', async ({ page }) => {
   await openApp(page, false);
   await upload(page, ['red.png']);

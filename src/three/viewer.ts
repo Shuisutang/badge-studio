@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { ACRYLIC_FACE, ACRYLIC_HOLE, BADGE_FACE, DESIGN } from '../render/geometry';
 import { ACRYLIC_LIGHT } from '../render/lighting';
-import { faceUv, projectToRoundedRect, roundedRectSdf, tinHeight, tinWallUv, type TinShape } from './geometry3d';
+import { faceUv, projectToRoundedRect, roundedRectSdf, tinHeight, tinWallUv, TIN_SIDE_DEPTH, type TinShape } from './geometry3d';
 import { roundedShape } from './modelGeometry';
 import { createTinBack } from './tinBack';
 
@@ -198,7 +198,7 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
       clearcoatRoughness: 0.14 - input.gloss * 0.15,
       specularIntensity: 0.6,
     });
-    const side = 0.05; // rolled wall depth behind the rim
+    const side = TIN_SIDE_DEPTH;
     const face = new THREE.Mesh(geo, mat);
     face.position.z = side / 2;
     // The printed paper/film wraps the entire shell side, including square tins.

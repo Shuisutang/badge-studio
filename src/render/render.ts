@@ -38,6 +38,8 @@ export interface RenderInput {
    * the texture for the 3D preview, where real lights do that job.
    */
   printOnly?: boolean;
+  /** Tin print-only: reserve an uncut margin for one continuous front/side sheet. */
+  bleed?: number;
   /** acrylic only: just the art panel's alpha footprint (for the back white-ink layer in 3D) */
   inkMask?: boolean;
 }
@@ -342,6 +344,8 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
   ctx.clearRect(0, 0, DESIGN, DESIGN);
   ctx.save();
   const { x, y, w, h } = BADGE_FACE;
+  const bleed = input.printOnly ? Math.max(0, input.bleed ?? 0) : 0;
+  const sheet = { x: x - bleed, y: y - bleed, w: w + 2 * bleed, h: h + 2 * bleed };
   const square = s.style === 'square';
   const r = square ? 6 : g.radius;
   const ring = g.ring;
@@ -359,21 +363,23 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
     badgeContactShadow(ctx, BADGE_FACE, sh, depth, r);
   }
 
-  // Base printed layer always fills the whole badge face.
+  // Reserve source pixels outside the trim on the same large sheet. The 3D
+  // face and side then sample adjacent areas of this single image.
   ctx.save();
-  rr(ctx, x, y, w, h, r);
+  if (bleed) { ctx.beginPath(); ctx.rect(sheet.x, sheet.y, sheet.w, sheet.h); }
+  else rr(ctx, x, y, w, h, r);
   ctx.clip();
   // Fix (B4): print on white stock, so transparent PNGs don't turn the badge
   // face see-through. Opaque artwork covers this completely (no visual change).
   ctx.fillStyle = '#fff';
-  ctx.fillRect(x, y, w, h);
-  drawImageFit(ctx, input, x, y, w, h, g.outerZoom / 100, 'outer');
+  ctx.fillRect(sheet.x, sheet.y, sheet.w, sheet.h);
+  drawImageFit(ctx, input, sheet.x, sheet.y, sheet.w, sheet.h, g.outerZoom / 100, 'outer');
   const wash = ctx.createLinearGradient(x, y, x, y + h);
   wash.addColorStop(0, 'rgba(255,255,255,.05)');
   wash.addColorStop(0.35, 'rgba(255,255,255,.015)');
   wash.addColorStop(1, 'rgba(255,255,255,.02)');
   ctx.fillStyle = wash;
-  ctx.fillRect(x, y, w, h);
+  ctx.fillRect(sheet.x, sheet.y, sheet.w, sheet.h);
   ctx.restore();
 
   // Outer-ring tint. The clear window always follows the real centre panel
@@ -383,25 +389,28 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
   // panel > 100% the even-odd path painted tint outside the rounded corners.
   if (g.overlayAlpha > 0) {
     ctx.save();
-    rr(ctx, x, y, w, h, r);
+    if (bleed) { ctx.beginPath(); ctx.rect(sheet.x, sheet.y, sheet.w, sheet.h); }
+    else rr(ctx, x, y, w, h, r);
     ctx.clip();
     ctx.beginPath();
-    roundedSubpath(ctx, x, y, w, h, r);
+    if (bleed) ctx.rect(sheet.x, sheet.y, sheet.w, sheet.h);
+    else roundedSubpath(ctx, x, y, w, h, r);
     panelSubpath(ctx, s, inner, innerR, w);
     ctx.clip('evenodd');
     ctx.fillStyle = css(tint, g.overlayAlpha / 100);
-    ctx.fillRect(x, y, w, h);
+    ctx.fillRect(sheet.x, sheet.y, sheet.w, sheet.h);
     const rg = ctx.createLinearGradient(x, y, x + w, y + h);
     rg.addColorStop(0, 'rgba(255,255,255,.09)');
     rg.addColorStop(0.52, 'rgba(255,255,255,0)');
     rg.addColorStop(1, 'rgba(0,0,0,.045)');
     ctx.fillStyle = rg;
-    ctx.fillRect(x, y, w, h);
+    ctx.fillRect(sheet.x, sheet.y, sheet.w, sheet.h);
     ctx.restore();
   }
 
   ctx.save();
-  rr(ctx, x, y, w, h, r);
+  if (bleed) { ctx.beginPath(); ctx.rect(sheet.x, sheet.y, sheet.w, sheet.h); }
+  else rr(ctx, x, y, w, h, r);
   ctx.clip();
   drawArtPanel(ctx, input, inner, innerR, { outerLimit: w });
   ctx.restore();
