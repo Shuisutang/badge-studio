@@ -67,7 +67,7 @@ test('random combinations of every control keep a valid render (200 states)', as
     const out = [];
     for (let n = 0; n < 200; n++) {
       const item = {
-        style: pick(['rounded', 'square', 'acrylic']),
+        style: pick(['rounded', 'square', 'tilted', 'acrylic']),
         rotation: range(-30, 30), artSize: range(65, 110), acrylicHole: rnd() > 0.5,
         overlayMode: pick(['auto', 'custom', 'white', 'black']), overlayCustom: '#3366CC',
         fit: pick(['cover', 'contain']), zoom: range(75, 180), offsetX: range(-100, 100), offsetY: range(-100, 100),
@@ -113,6 +113,7 @@ test('tilted + oversized panel never paints outside the rounded corners (v16 eve
         }
       return n;
     });
+  await page.locator('[data-style="tilted"]').click();
   // Baseline: the plain face (its quadratic corners are slightly fuller than a circle).
   await setRange(page, 'radius', 150);
   const baseline = await outside();
@@ -141,10 +142,12 @@ test('controls are grouped: primary visible, advanced folded by default', async 
   await page.waitForSelector('html[data-ready="1"]');
   await upload(page, ['square.png']);
   await expect(page.locator('[data-style="rounded"]')).toBeVisible();
-  await expect(page.locator('#rotation')).toBeVisible();
+  await expect(page.locator('[data-style="tilted"]')).toBeVisible();
   await expect(page.locator('#artSize')).toBeVisible();
   await expect(page.locator('[data-overlay="auto"]')).toBeVisible();
-  for (const id of ['radius', 'ring', 'bevel', 'zoom', 'markText']) await expect(page.locator('#' + id)).toBeHidden();
+  // fine angle lives in 高级 · 主图倾斜; the copyright block is the last item of 款式
+  for (const id of ['rotation', 'radius', 'ring', 'bevel', 'zoom', 'markText']) await expect(page.locator('#' + id)).toBeHidden();
+  expect(await page.evaluate(() => document.querySelector('#p-style')!.lastElementChild!.classList.contains('copyright-control'))).toBe(true);
   await page.locator('[data-preset="flat"]').click();
   await expect(page.locator('#threeDEnabled')).not.toBeChecked();
   await page.locator('[data-preset="standard"]').click();

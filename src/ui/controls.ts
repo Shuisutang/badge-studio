@@ -1,9 +1,9 @@
 import { automaticTint, overlayTint, rgbToHex } from '../color/color';
 import { LOOK_PRESETS, matchPreset } from '../model/presets';
-import { DEFAULT_ITEM } from '../model/defaults';
+import { DEFAULT_ITEM, TILT_PRESET } from '../model/defaults';
 import type { Store } from '../model/store';
 import type { BadgeItem, GlobalSettings, ItemSettings, MarkColorMode, MarkMode, MarkPosition, OverlayMode, PreviewBg } from '../model/types';
-import { ACRYLIC_ART_BASE, ACRYLIC_FACE, BADGE_FACE, artPanelGeometry, panRange } from '../render/geometry';
+import { ACRYLIC_ART_BASE, ACRYLIC_FACE, BADGE_FACE, artPanelGeometry, panRange, tinRing } from '../render/geometry';
 import { ACRYLIC_LIGHT } from '../render/lighting';
 import { $ } from './dom';
 import { guardRotationSlider } from './rotation';
@@ -11,6 +11,7 @@ import { guardRotationSlider } from './rotation';
 const STYLE_HINTS: Record<ItemSettings['style'], string> = {
   rounded: '圆角马口铁吧唧：微微鼓起的面，左上斜向柔光，边缘包边变暗。',
   square: '直角方吧唧：平整印刷面，金属反光包边，柔和投影。',
+  tilted: `旋转吧唧：圆角吧唧，中间主图按官图角度倾斜（默认 ${TILT_PRESET}°），可在「高级 · 主图倾斜」微调。`,
   acrylic: '厚亚克力：清透板材、柔和边缘反光；描边、画外背景和左下圆孔均可调整。',
 };
 
@@ -51,13 +52,13 @@ export class Controls {
     guardRotationSlider(rot, $('rotationControl'));
     rot.addEventListener('input', () => {
       const it = this.item;
-      if (!it || it.settings.style !== 'rounded') return;
+      if (!it || it.settings.style !== 'tilted') return;
       $('rotation-v').textContent = signedDeg(Number(rot.value));
       this.patchItem({ rotation: Number(rot.value) }, true);
     });
     rot.addEventListener('change', () => {
       const it = this.item;
-      if (it && it.settings.style === 'rounded') this.patchItem({ rotation: Number(rot.value) });
+      if (it && it.settings.style === 'tilted') this.patchItem({ rotation: Number(rot.value) });
     });
   }
 
@@ -74,14 +75,19 @@ export class Controls {
 
   private bindItemButtons(): void {
     document.querySelectorAll<HTMLButtonElement>('[data-style]').forEach((b) =>
-      // Fix (B5): the rotation value is kept when switching style; it is simply
-      // not applied to square/acrylic, and comes back when you return to rounded.
-      b.addEventListener('click', () => this.patchItem({ style: b.dataset.style as ItemSettings['style'] })),
+      // The angle is kept when switching style (only 旋转 applies it). Choosing
+      // 旋转 with no angle yet applies the official-photo preset.
+      b.addEventListener('click', () => {
+        const style = b.dataset.style as ItemSettings['style'];
+        const it = this.item;
+        if (style === 'tilted' && it && it.settings.rotation === 0) this.patchItem({ style, rotation: TILT_PRESET });
+        else this.patchItem({ style });
+      }),
     );
     document.querySelectorAll<HTMLButtonElement>('[data-fit]').forEach((b) =>
       b.addEventListener('click', () => this.patchItem({ fit: b.dataset.fit === 'contain' ? 'contain' : 'cover' })),
     );
-    $('resetRotation').addEventListener('click', () => this.patchItem({ rotation: 0 }));
+    $('resetRotation').addEventListener('click', () => this.patchItem({ rotation: TILT_PRESET }));
     $('resetCrop').addEventListener('click', () =>
       this.patchItem({ zoom: DEFAULT_ITEM.zoom, offsetX: 0, offsetY: 0, fit: DEFAULT_ITEM.fit }),
     );
@@ -109,7 +115,7 @@ export class Controls {
         const it = this.item;
         if (!it) return;
         const key = b.dataset.step as 'rotation' | 'artSize';
-        if (key === 'rotation' && it.settings.style !== 'rounded') return;
+        if (key === 'rotation' && it.settings.style !== 'tilted') return;
         this.patchItem({ [key]: it.settings[key] + Number(b.dataset.delta) });
       }),
     );
@@ -184,7 +190,7 @@ export class Controls {
       b.classList.toggle('active', on);
       b.setAttribute('aria-pressed', String(on));
     });
-    const rotationEnabled = st.style === 'rounded';
+    const rotationEnabled = st.style === 'tilted';
     const rot = $<HTMLInputElement>('rotation');
     rot.value = String(st.rotation);
     rot.disabled = !rotationEnabled;
@@ -192,10 +198,8 @@ export class Controls {
     $('rotation-v').textContent = signedDeg(st.rotation);
     $('rotationRow').style.opacity = rotationEnabled ? '1' : '.45';
     $('rotationNote').textContent = rotationEnabled
-      ? '只旋转中间主图，外圈仍保持水平'
-      : st.rotation
-        ? `直角和亚克力不旋转（切回圆角会恢复 ${signedDeg(st.rotation)}）`
-        : '直角方吧唧和亚克力不使用旋转';
+      ? `只旋转中间主图，外圈保持水平；官图约 ${signedDeg(TILT_PRESET)}`
+      : '选择款式「旋转吧唧」后可调整';
     for (const input of document.querySelectorAll<HTMLInputElement>('input[data-item]')) {
       const k = input.dataset.item as NumKey<ItemSettings>;
       input.value = String(st[k]);
@@ -206,7 +210,7 @@ export class Controls {
     $<HTMLInputElement>('acrylicHole').checked = st.acrylicHole;
     $<HTMLInputElement>('acrylicOutlineColor').value = st.acrylicOutlineColor.toLowerCase();
     $('acrylicOutlineColor-v').textContent = st.acrylicOutlineColor;
-    ($('radius') as HTMLInputElement).disabled = st.style !== 'rounded';
+    ($('radius') as HTMLInputElement).disabled = st.style === 'square' || st.style === 'acrylic';
     $('styleHint').textContent = STYLE_HINTS[st.style];
     const hex = rgbToHex(overlayTint(st, it.colors));
     document.querySelectorAll<HTMLElement>('[data-overlay]').forEach((b) => {
@@ -217,14 +221,14 @@ export class Controls {
     $('autoDot').style.background = rgbToHex(automaticTint(it.colors));
     $<HTMLInputElement>('overlayColor').value = hex.toLowerCase();
     $('overlayHex').textContent = hex;
-    document.querySelectorAll<HTMLButtonElement>('button[data-step="rotation"]').forEach((b) => (b.disabled = st.style !== 'rounded'));
+    document.querySelectorAll<HTMLButtonElement>('button[data-step="rotation"]').forEach((b) => (b.disabled = st.style !== 'tilted'));
     this.syncPanHint(it);
   }
 
   private syncPanHint(it: BadgeItem): void {
     const acrylic = it.settings.style === 'acrylic';
     const face = acrylic ? ACRYLIC_FACE : BADGE_FACE;
-    const ring = acrylic ? ACRYLIC_LIGHT.border : this.store.globals.ring;
+    const ring = acrylic ? ACRYLIC_LIGHT.border : tinRing(it.settings.style, this.store.globals.ring);
     const box = { x: 0, y: 0, w: face.w - 2 * ring, h: face.h - 2 * ring };
     const panel = artPanelGeometry(it.settings.style, it.settings.rotation,
       it.settings.artSize * (acrylic ? ACRYLIC_ART_BASE : 1), box, 0,

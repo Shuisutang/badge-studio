@@ -10,7 +10,7 @@
  */
 import { css, hexToRgb, overlayTint } from '../color/color';
 import type { ColorSamples, Drawable, GlobalSettings, ItemSettings } from '../model/types';
-import { ACRYLIC_FACE, ACRYLIC_ART_BASE, ACRYLIC_HOLE, BADGE_FACE, DESIGN, artPanelGeometry, fitRect, type Rect } from './geometry';
+import { ACRYLIC_FACE, ACRYLIC_ART_BASE, ACRYLIC_HOLE, BADGE_FACE, DESIGN, SQUARE_CORNER, TIN_OUTER_K, TIN_RING_LIFT, artPanelGeometry, fitRect, tinRing, type Rect } from './geometry';
 import {
   ACRYLIC_LIGHT,
   acrylicBackSheet,
@@ -22,6 +22,7 @@ import {
   badgeContactShadow,
   badgeFaceLighting,
   badgeGloss,
+  tinSideWall,
 } from './lighting';
 import { depthAcrylicBackSheet, depthAcrylicGroundShadow, depthAcrylicRim, depthContactShadow, depthFaceLighting } from './lightingDepth';
 import { roundedSubpath, rr } from './paths';
@@ -349,10 +350,10 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
   const bleed = input.printOnly ? Math.max(0, input.bleed ?? 0) : 0;
   const sheet = { x: x - bleed, y: y - bleed, w: w + 2 * bleed, h: h + 2 * bleed };
   const square = s.style === 'square';
-  const r = square ? 6 : g.radius;
-  const ring = g.ring;
+  const r = square ? SQUARE_CORNER : g.radius;
+  const ring = tinRing(s.style, g.ring);
   const inner: Rect = { x: x + ring, y: y + ring, w: w - 2 * ring, h: h - 2 * ring };
-  const innerR = square ? 1 : Math.max(6, r - ring * 0.85);
+  const innerR = square ? 2 : Math.max(6, r - ring * 0.85);
   const tint = overlayTint(s, input.colors);
   const has3d = g.threeDEnabled;
   const depth = has3d ? g.depth : 0;
@@ -363,6 +364,7 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
   if (!input.printOnly) {
     depthContactShadow(ctx, BADGE_FACE, sh, depth);
     badgeContactShadow(ctx, BADGE_FACE, sh, depth, r);
+    tinSideWall(ctx, BADGE_FACE, r, depth);
   }
 
   // Reserve source pixels outside the trim on the same large sheet. The 3D
@@ -375,7 +377,7 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
   // face see-through. Opaque artwork covers this completely (no visual change).
   ctx.fillStyle = '#fff';
   ctx.fillRect(sheet.x, sheet.y, sheet.w, sheet.h);
-  drawImageFit(ctx, input, sheet.x, sheet.y, sheet.w, sheet.h, g.outerZoom / 100, 'outer');
+  drawImageFit(ctx, input, sheet.x, sheet.y, sheet.w, sheet.h, (g.outerZoom / 100) * TIN_OUTER_K, 'outer');
   const wash = ctx.createLinearGradient(x, y, x, y + h);
   wash.addColorStop(0, 'rgba(255,255,255,.05)');
   wash.addColorStop(0.35, 'rgba(255,255,255,.015)');
@@ -401,6 +403,12 @@ function drawBadge(ctx: Ctx, input: RenderInput, dim: number): void {
     ctx.clip('evenodd');
     ctx.fillStyle = css(tint, g.overlayAlpha / 100);
     ctx.fillRect(sheet.x, sheet.y, sheet.w, sheet.h);
+    // Official prints wash the frame toward white so the main panel stands out
+    // (auto colour only: a hand-picked frame colour is used as chosen).
+    if (s.overlayMode === 'auto') {
+      ctx.fillStyle = `rgba(255,255,255,${TIN_RING_LIFT * (g.overlayAlpha / 100)})`;
+      ctx.fillRect(sheet.x, sheet.y, sheet.w, sheet.h);
+    }
     const rg = ctx.createLinearGradient(x, y, x + w, y + h);
     rg.addColorStop(0, 'rgba(255,255,255,.09)');
     rg.addColorStop(0.52, 'rgba(255,255,255,0)');

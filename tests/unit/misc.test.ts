@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_CANVAS_AREA, MAX_CANVAS_SIDE, safeFileName, sheetLayout, uniqueNames } from '../../src/export/layout';
 import { baseName, isLowRes, looksLikeImage, targetSize } from '../../src/image/sizing';
-import { DEFAULT_GLOBALS, DEFAULT_ITEM, sanitizeGlobals, sanitizeItemSettings } from '../../src/model/defaults';
+import { DEFAULT_GLOBALS, DEFAULT_ITEM, TILT_PRESET, migrateItemSettings, sanitizeGlobals, sanitizeItemSettings } from '../../src/model/defaults';
 
 describe('sheetLayout', () => {
   it('matches v16 for small batches', () => {
@@ -77,6 +77,13 @@ describe('sanitize (restored / imported data)', () => {
       acrylicOutlineWidth: 0, acrylicOutlineColor: DEFAULT_ITEM.acrylicOutlineColor,
       acrylicOutlineOpacity: 100, acrylicBackgroundBrightness: -80,
     });
+  });
+  it('keeps the 旋转 style and migrates older rotated rounded saves to it', () => {
+    expect(sanitizeItemSettings({ style: 'tilted', rotation: TILT_PRESET })).toMatchObject({ style: 'tilted', rotation: TILT_PRESET });
+    expect(migrateItemSettings({ style: 'rounded', rotation: -8 }, 1)).toMatchObject({ style: 'tilted', rotation: -8 });
+    expect(migrateItemSettings({ style: 'rounded', rotation: 0 }, 1).style).toBe('rounded');
+    // schema 2: a rounded badge that keeps an angle from an earlier 旋转 choice stays rounded
+    expect(migrateItemSettings({ style: 'rounded', rotation: -3 }, 2).style).toBe('rounded');
   });
   it('fills defaults and clamps', () => {
     expect(sanitizeItemSettings(null)).toEqual(DEFAULT_ITEM);

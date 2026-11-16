@@ -123,7 +123,7 @@ test('three.js is not in the main bundle (lazy chunk only)', async ({ page, requ
   }
 });
 
-for (const style of ['rounded', 'square', 'acrylic'] as const) {
+for (const style of ['rounded', 'square', 'tilted', 'acrylic'] as const) {
   test(`3D preview opens, renders and closes: ${style}`, async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));

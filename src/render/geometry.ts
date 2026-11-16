@@ -54,7 +54,7 @@ export interface PanelGeometry {
 }
 
 /**
- * The centre artwork panel. Only the rounded badge rotates; when tilted at ≤100%
+ * The centre artwork panel. Only the 旋转 (tilted) badge rotates; when tilted at ≤100%
  * size it auto-shrinks so the four corners stay inside the product face.
  * Zoom below 100% shrinks the complete panel; zoom above 100% only crops its image.
  */
@@ -67,8 +67,8 @@ export function artPanelGeometry(
   outerLimit?: number,
   zoom = 100,
 ): PanelGeometry {
-  const deg = style === 'rounded' ? rotation || 0 : 0;
-  const size = (artSize / 100) * Math.min(1, zoom / 100);
+  const deg = style === 'tilted' ? rotation || 0 : 0;
+  const size = (artSize / 100) * Math.min(1, zoom / 100) * (style === 'tilted' ? TILT_PANEL_K : 1);
   const absAngle = (Math.abs(deg) * Math.PI) / 180;
   const bboxFactor = Math.abs(Math.cos(absAngle)) + Math.abs(Math.sin(absAngle));
   const limit = outerLimit || box.w;
@@ -81,6 +81,27 @@ export function artPanelGeometry(
     cy: box.y + box.h / 2,
     corner: deg !== 0 ? 1 : r,
   };
+}
+
+/**
+ * Tin badge proportions tuned against CC's official merch photos (maimai
+ * UNIVERSE / PRiSM PLUS / オンゲキ, Nov 2026):
+ * - 直角: corners are not razor sharp (≈1.7 % of the width) and the printed
+ *   frame is thinner, so the main art covers ≈90 % instead of ≈88 %.
+ * - the printed background (底) is the same art blown up further than the
+ *   main panel, so its motifs read larger behind the panel.
+ * - 旋转: the tilted panel sits a little smaller so its corners keep a margin.
+ */
+export const SQUARE_CORNER = 12;
+export const SQUARE_RING_K = 0.78;
+export const TIN_OUTER_K = 1.14;
+export const TILT_PANEL_K = 0.96;
+/** extra white wash on the printed frame, × 叠色浓度 (official frames read milky) */
+export const TIN_RING_LIFT = 0.5;
+
+/** Printed frame width of a tin badge for the chosen style. */
+export function tinRing(style: BadgeStyle, ring: number): number {
+  return style === 'square' ? ring * SQUARE_RING_K : ring;
 }
 
 /** Badge face geometry in the 960×960 design space. Kept identical to v16. */

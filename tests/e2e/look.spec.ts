@@ -31,8 +31,9 @@ test('tin badge: top-left sheen brighter than bottom-right; rim rolls over darke
   const br = await area(page, 720, 700);
   expect(tl).toBeGreaterThan(br + 8);
   // the v2 bright edge line sits in the outer ~5px; the roll-over shade is just inside it
+  // (both probes on the printed frame, which is washed lighter than the main panel)
   const rim = await area(page, 826, 470, 4);
-  const inside = await area(page, 760, 470, 4);
+  const inside = await area(page, 808, 470, 4);
   expect(rim).toBeLessThan(inside);
 });
 

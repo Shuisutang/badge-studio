@@ -68,11 +68,15 @@ export const RANGES = {
   markBottom: [8, 150],
 } as const satisfies Record<string, readonly [number, number]>;
 
+/** 旋转款 preset: the main panel tilt seen in official rounded tin badge photos (top edge rising to the right). */
+export const TILT_PRESET = -3;
+
 export const RESOLUTIONS = [1200, 2000, 3000] as const;
 
 export const STYLE_TITLES: Record<BadgeStyle, string> = {
   rounded: '圆角方吧唧',
   square: '直角方吧唧',
+  tilted: '旋转方吧唧',
   acrylic: '亚克力方牌',
 };
 
@@ -98,7 +102,7 @@ export function sanitizeItemSettings(raw: unknown): ItemSettings {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   const d = DEFAULT_ITEM;
   return {
-    style: oneOf<BadgeStyle>(r.style, ['rounded', 'square', 'acrylic'], d.style),
+    style: oneOf<BadgeStyle>(r.style, ['rounded', 'square', 'tilted', 'acrylic'], d.style),
     rotation: Math.round(num(r.rotation, d.rotation, RANGES.rotation)),
     artSize: Math.round(num(r.artSize, d.artSize, RANGES.artSize)),
     acrylicHole: typeof r.acrylicHole === 'boolean' ? r.acrylicHole : d.acrylicHole,
@@ -114,6 +118,16 @@ export function sanitizeItemSettings(raw: unknown): ItemSettings {
     offsetY: num(r.offsetY, d.offsetY, RANGES.offsetY),
     exported: typeof r.exported === 'boolean' ? r.exported : d.exported,
   };
+}
+
+/**
+ * Saved work from before 旋转 became its own style (schema 1): there, a rounded
+ * badge with a non-zero rotation was drawn tilted, so it now restores as 旋转.
+ */
+export function migrateItemSettings(raw: unknown, schema: number): ItemSettings {
+  const s = sanitizeItemSettings(raw);
+  if (schema < 2 && s.style === 'rounded' && s.rotation !== 0) s.style = 'tilted';
+  return s;
 }
 
 export function sanitizeGlobals(raw: unknown): GlobalSettings {

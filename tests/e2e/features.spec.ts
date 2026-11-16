@@ -119,15 +119,16 @@ test('style buttons and sliders work from the keyboard', async ({ page }) => {
   await page.locator('[data-style="square"]').focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('[data-style="square"]')).toHaveAttribute('aria-pressed', 'true');
-  await page.locator('[data-style="rounded"]').focus();
+  await page.locator('[data-style="tilted"]').focus();
   await page.keyboard.press('Space');
+  await expect(page.locator('#rotation-v')).toHaveText('-3°');
   await page.locator('#rotation').focus();
   await page.keyboard.press('ArrowLeft');
   await page.keyboard.press('ArrowLeft');
   await settle(page);
-  await expect(page.locator('#rotation-v')).toHaveText('-2°');
+  await expect(page.locator('#rotation-v')).toHaveText('-5°');
   // labels are associated with their inputs
-  await expect(page.getByLabel('主图旋转')).toHaveAttribute('id', 'rotation');
+  await expect(page.getByLabel('倾斜角度')).toHaveAttribute('id', 'rotation');
 });
 
 test('no console errors through a full session', async ({ page }) => {
@@ -135,7 +136,7 @@ test('no console errors through a full session', async ({ page }) => {
   page.on('pageerror', (e) => errs.push(e.message));
   page.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
   await upload(page, ['square.png', 'wide.jpg', 'photo.webp', 'transparent.png']);
-  for (const s of ['square', 'acrylic', 'rounded']) {
+  for (const s of ['square', 'tilted', 'acrylic', 'rounded']) {
     await page.locator(`[data-style="${s}"]`).click();
     await settle(page);
   }

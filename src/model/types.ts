@@ -1,6 +1,6 @@
 export type RGB = [number, number, number];
 
-export type BadgeStyle = 'rounded' | 'square' | 'acrylic';
+export type BadgeStyle = 'rounded' | 'square' | 'tilted' | 'acrylic';
 export type OverlayMode = 'auto' | 'custom' | 'white' | 'black';
 export type FitMode = 'cover' | 'contain';
 export type PreviewBg = 'checkers' | 'white' | 'dark';
@@ -11,7 +11,7 @@ export type MarkColorMode = 'white' | 'black' | 'custom';
 /** Settings that belong to one artwork. Switching images never touches another item's values. */
 export interface ItemSettings {
   style: BadgeStyle;
-  /** -30 … 30 degrees. Kept for every style but only applied to the rounded badge. */
+  /** -30 … 30 degrees. Kept for every style but only applied to the tilted (旋转) badge. */
   rotation: number;
   /** 65 … 110 (%) size of the centre artwork panel. */
   artSize: number;

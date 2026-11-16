@@ -66,7 +66,7 @@ export const SQUARE_LIGHT = {
   sheenK: 0.55,
   rollK: 0.6,
   rim: {
-    width: 5,
+    width: 7,
     /** gradient along the diagonal: [t, rgb, alpha] — chrome-like banding */
     stops: [
       [0, '255,255,255', 0.95],
@@ -145,6 +145,34 @@ function diagonal(ctx: Ctx, f: Rect, stops: readonly (readonly [number, number])
 }
 
 // ---------------- rounded / square badge ----------------
+
+/**
+ * Visible tin side wall (底) behind the face. The official photos are shot from
+ * slightly above-left, so a light silver band of the rolled edge shows along
+ * the right and bottom, ending in a thin darker lip. Scales with 边缘厚度.
+ */
+export const TIN_SIDE = { dxK: 0.55, dyK: 0.85, top: '236,239,244', bottom: '176,184,196', lip: 'rgba(70,82,100,.32)' } as const;
+
+export function tinSideWall(ctx: Ctx, f: Rect, r: number, depth: number): void {
+  if (depth <= 0) return;
+  const dx = depth * TIN_SIDE.dxK;
+  const dy = depth * TIN_SIDE.dyK;
+  ctx.save();
+  const g = ctx.createLinearGradient(f.x, f.y, f.x + f.w * 0.4, f.y + f.h);
+  g.addColorStop(0, `rgb(${TIN_SIDE.top})`);
+  g.addColorStop(1, `rgb(${TIN_SIDE.bottom})`);
+  for (let i = 1; i <= 3; i++) {
+    const k = i / 3;
+    rr(ctx, f.x + dx * k, f.y + dy * k, f.w, f.h, r);
+    ctx.fillStyle = g;
+    ctx.fill();
+  }
+  rr(ctx, f.x + dx - 0.5, f.y + dy - 0.5, f.w + 1, f.h + 1, r);
+  ctx.strokeStyle = TIN_SIDE.lip;
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.restore();
+}
 
 export function badgeContactShadow(ctx: Ctx, f: Rect, sh: number, depth: number, r = 84): void {
   if (sh <= 0) return;

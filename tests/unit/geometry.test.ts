@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { acrylicHoleCenter, artPanelGeometry, fitRect, panRange } from '../../src/render/geometry';
+import { TILT_PRESET } from '../../src/model/defaults';
+import { TILT_PANEL_K, acrylicHoleCenter, artPanelGeometry, fitRect, panRange } from '../../src/render/geometry';
 
 const box = { x: 100, y: 100, w: 600, h: 600 };
 const P = { fit: 'cover' as const, zoom: 100, offsetX: 0, offsetY: 0 };
@@ -38,19 +39,25 @@ describe('artPanelGeometry', () => {
     expect(g).toMatchObject({ deg: 0, panelW: 600, panelH: 600, corner: 40 });
   });
   it('auto-shrinks a tilted panel so corners stay inside', () => {
-    const g = artPanelGeometry('rounded', -12, 100, box, 40, 724);
-    expect(g.panelW).toBeLessThan(600);
+    const g = artPanelGeometry('tilted', -12, 100, box, 40, 724);
+    expect(g.panelW).toBeLessThan(600 * TILT_PANEL_K);
     expect(g.corner).toBe(1);
   });
   it('lets the user oversize on purpose (>100%)', () => {
-    expect(artPanelGeometry('rounded', 20, 110, box, 40).panelW).toBeCloseTo(660);
+    expect(artPanelGeometry('tilted', 20, 110, box, 40).panelW).toBeCloseTo(660 * TILT_PANEL_K);
+  });
+  it('only the 旋转 style rotates (and sits slightly smaller)', () => {
+    expect(artPanelGeometry('rounded', -3, 100, box, 40).deg).toBe(0);
+    const t = artPanelGeometry('tilted', TILT_PRESET, 100, box, 40, 724);
+    expect(t.deg).toBe(TILT_PRESET);
+    expect(t.panelW).toBeCloseTo(600 * TILT_PANEL_K);
   });
   it('never rotates square or acrylic', () => {
     expect(artPanelGeometry('square', 20, 100, box, 1).deg).toBe(0);
     expect(artPanelGeometry('acrylic', -30, 100, box, 0).deg).toBe(0);
   });
   it('zoom below 100 shrinks the panel like art size, while zooming in keeps its boundary', () => {
-    for (const style of ['rounded', 'square', 'acrylic'] as const) {
+    for (const style of ['rounded', 'square', 'tilted', 'acrylic'] as const) {
       expect(artPanelGeometry(style, -12, 100, box, 40, 724, 75))
         .toEqual(artPanelGeometry(style, -12, 75, box, 40, 724));
       expect(artPanelGeometry(style, -12, 100, box, 40, 724, 150))

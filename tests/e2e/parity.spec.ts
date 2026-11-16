@@ -24,7 +24,12 @@ interface Case {
  * Since v3 the lighting/shadow layers were retuned against official merch
  * photos (see look.spec.ts), and the square badge got slightly softer corners
  * plus a metal rim, so parity with v16 is only checked for the PRINT: rounded
- * badges with 3D off and gloss 0 (geometry, fit, tint ring, rotation, mark).
+ * badges with 3D off and gloss 0 (geometry, fit, centre panel, outline).
+ * Since the Nov 2026 official-photo pass the printed frame (底) is the art
+ * blown up further and washed toward white, and the tilt became its own 旋转
+ * style with a slightly smaller panel, so the frame band between the face edge
+ * and the main panel is masked out and the old rounded+rotation case is gone
+ * (covered by unit tests and features.spec.ts instead).
  */
 const FLAT = { gloss: 0 };
 const CASES: Case[] = [
@@ -32,7 +37,6 @@ const CASES: Case[] = [
   { name: 'red-rounded', img: 'red.png', no3d: true, ranges: FLAT },
   { name: 'square-rounded', img: 'square.png', no3d: true, ranges: FLAT },
   { name: 'photo-rounded', img: 'photo.webp', no3d: true, ranges: FLAT },
-  { name: 'square-rot-12', img: 'square.png', rotation: -12, no3d: true, ranges: FLAT },
   // artSize ≠ 100 is intentionally different now (tint window follows the panel), see coupling.spec.ts
   { name: 'square-size110', img: 'square.png', artSize: 100, no3d: true, ranges: { ...FLAT, ring: 20 } },
   { name: 'square-look', img: 'square.png', no3d: true, ranges: { gloss: 0, radius: 120, ring: 70, overlayAlpha: 70 } },
@@ -90,10 +94,27 @@ for (const c of CASES) {
     await applyCase(page, c, false);
     const b = Buffer.from(await grab(page), 'base64');
     expect(b.length).toBe(a.length);
+    // Mask: the printed frame band (face minus the main panel, corners included).
+    const F = { x: 118, y: 102, w: 724, h: 724 };
+    const ring = c.ranges?.ring ?? 44;
+    const radius = c.ranges?.radius ?? 84;
+    const innerR = Math.max(6, radius - ring * 0.85);
+    const pad = 3;
+    const framed = (px: number, py: number) => {
+      const inFace = px >= F.x - pad && px < F.x + F.w + pad && py >= F.y - pad && py < F.y + F.h + pad;
+      if (!inFace) return false;
+      const x0 = F.x + ring + pad, y0 = F.y + ring + pad, x1 = F.x + F.w - ring - pad, y1 = F.y + F.h - ring - pad;
+      if (px < x0 || px >= x1 || py < y0 || py >= y1) return true;
+      const cx = px < x0 + innerR ? x0 + innerR : px > x1 - innerR ? x1 - innerR : px;
+      const cy = py < y0 + innerR ? y0 + innerR : py > y1 - innerR ? y1 - innerR : py;
+      return (px - cx) ** 2 + (py - cy) ** 2 > innerR ** 2;
+    };
     let max = 0;
     let sum = 0;
     let over = 0;
     for (let i = 0; i < a.length; i++) {
+      const p = i >> 2;
+      if (framed(p % 960, Math.floor(p / 960))) continue;
       const d = Math.abs(a[i]! - b[i]!);
       sum += d;
       if (d > max) max = d;

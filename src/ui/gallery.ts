@@ -124,7 +124,7 @@ export class Gallery {
     const hex = rgbToHex(overlayTint(it.settings, it.colors));
     t.dot.style.backgroundColor = hex;
     t.hex.textContent = hex;
-    const rot = it.settings.style === 'rounded' && it.settings.rotation ? ` · ${it.settings.rotation}°` : '';
+    const rot = it.settings.style === 'tilted' && it.settings.rotation ? ` · ${it.settings.rotation}°` : '';
     const low = !it.isDemo && isLowRes(it.naturalWidth, it.naturalHeight, this.store.globals.resolution);
     t.style.textContent = STYLE_TITLES[it.settings.style] + rot;
     t.include.checked = it.settings.exported;

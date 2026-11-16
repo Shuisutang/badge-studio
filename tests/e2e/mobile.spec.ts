@@ -42,9 +42,13 @@ test('mobile tabs switch panels; touch targets are at least 44px', async ({ page
     const box = await page.locator(sel).first().boundingBox();
     expect(Math.min(box!.width, box!.height), sel).toBeGreaterThanOrEqual(sel === '.tile-remove' ? 30 : 44);
   }
+  await page.locator('[data-style="tilted"]').tap();
+  await page.locator('#tab-advanced').tap();
+  await page.locator('#d-tilt summary').tap();
   await page.locator('.step[data-step="rotation"][data-delta="1"]').tap();
   await page.locator('.step[data-step="rotation"][data-delta="1"]').tap();
-  await expect(page.locator('#rotation-v')).toHaveText('+2°');
+  await expect(page.locator('#rotation-v')).toHaveText('-1°');
+  await page.locator('#tab-style').tap();
   await page.locator('#sheetToggle').tap();
   await expect(page.locator('#p-style')).toBeHidden();
 });

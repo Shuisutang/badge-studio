@@ -9,7 +9,7 @@
  */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { ACRYLIC_FACE, ACRYLIC_HOLE, BADGE_FACE, DESIGN } from '../render/geometry';
+import { ACRYLIC_FACE, ACRYLIC_HOLE, BADGE_FACE, DESIGN, SQUARE_CORNER } from '../render/geometry';
 import { ACRYLIC_LIGHT } from '../render/lighting';
 import { faceUv, projectToRoundedRect, roundedRectSdf, tinHeight, tinWallUv, TIN_SIDE_DEPTH, type TinShape } from './geometry3d';
 import { roundedShape } from './modelGeometry';
@@ -22,7 +22,7 @@ export interface ViewerInput {
   sidePrint?: HTMLCanvasElement;
   /** acrylic: alpha footprint of the printed art panel (where the back white ink is) */
   inkMask?: HTMLCanvasElement;
-  style: 'rounded' | 'square' | 'acrylic';
+  style: 'rounded' | 'square' | 'tilted' | 'acrylic';
   /** design-space corner radius of the badge face */
   radius: number;
   hole: boolean;
@@ -183,7 +183,7 @@ export function createViewer(host: HTMLElement, first: ViewerInput): Viewer {
     const f = BADGE_FACE;
     const hx = 0.5;
     const hy = 0.5;
-    const r = (input.style === 'square' ? 6 : input.radius) / f.w;
+    const r = (input.style === 'square' ? SQUARE_CORNER : input.radius) / f.w;
     const sq = input.style === 'square';
     // 直角吧唧 has a flat face and a tight rim; the rounded one is gently domed
     const shape: TinShape = sq

@@ -69,9 +69,35 @@
             <div class="style-switch" role="group" aria-label="样机款式">
               <button class="style-option active" data-style="rounded" type="button" aria-pressed="true"><span class="ico ico-rounded" aria-hidden="true"></span>圆角吧唧</button>
               <button class="style-option" data-style="square" type="button" aria-pressed="false"><span class="ico ico-square" aria-hidden="true"></span>直角吧唧</button>
+              <button class="style-option" data-style="tilted" type="button" aria-pressed="false" title="圆角吧唧，主图按官图角度微微倾斜"><span class="ico ico-tilted" aria-hidden="true"></span>旋转吧唧</button>
               <button class="style-option" data-style="acrylic" type="button" aria-pressed="false"><span class="ico ico-acrylic" aria-hidden="true"></span>亚克力牌</button>
             </div>
             <p id="styleHint" class="note">圆角塑封：顶部细长高光，底部柔雾投影。</p>
+            <div class="label"><label for="artSize">主图尺寸</label> <output id="artSize-v">100%</output></div>
+            <div class="stepper">
+              <button type="button" class="step" data-step="artSize" data-delta="-1" aria-label="主图缩小 1%">−</button>
+              <input id="artSize" type="range" min="65" max="110" value="100" step="1" data-item="artSize" data-unit="%" />
+              <button type="button" class="step" data-step="artSize" data-delta="1" aria-label="主图放大 1%">＋</button>
+            </div>
+            <label class="checkline" id="acrylicHoleRow" hidden><input id="acrylicHole" type="checkbox" checked /> 左下角透明圆孔</label>
+            <details class="sub" id="acrylicAppearance" open hidden>
+              <summary>描边与画外背景 <small>当前图片</small></summary>
+              <div class="label"><label for="acrylicOutlineWidth">描边粗细</label> <output id="acrylicOutlineWidth-v">1.5 px</output></div>
+              <input id="acrylicOutlineWidth" type="range" min="0" max="10" step="0.5" value="1.5" data-item="acrylicOutlineWidth" data-unit=" px" />
+              <div class="label"><label for="acrylicOutlineColor">描边颜色</label> <output id="acrylicOutlineColor-v">#627A8A</output></div>
+              <input id="acrylicOutlineColor" type="color" value="#627a8a" />
+              <div class="label"><label for="acrylicOutlineOpacity">描边不透明度</label> <output id="acrylicOutlineOpacity-v">24%</output></div>
+              <input id="acrylicOutlineOpacity" type="range" min="0" max="100" value="24" data-item="acrylicOutlineOpacity" data-unit="%" />
+              <div class="label"><label for="acrylicBackgroundBrightness">画外背景明暗</label> <output id="acrylicBackgroundBrightness-v">8%</output></div>
+              <input id="acrylicBackgroundBrightness" type="range" min="-80" max="80" value="8" data-item="acrylicBackgroundBrightness" data-unit="%" />
+              <div class="range-hints"><span>更暗</span><span>更亮</span></div>
+              <p class="note">明暗只影响主图外圈，0 不额外提亮或压暗。描边粗细设为 0 可关闭描边。</p>
+              <button type="button" class="inline-link" id="resetAcrylic">恢复默认描边与背景</button>
+            </details>
+            <div class="row-actions">
+              <button type="button" class="btn small" id="resetItem">还原这张</button>
+              <button type="button" class="btn small" id="applyAll">应用到全部图片</button>
+            </div>
             <section class="copyright-control" aria-labelledby="copyrightTitle">
               <div class="copyright-heading">
                 <h3 id="copyrightTitle">版权标 <small>所有图片</small></h3>
@@ -131,43 +157,6 @@
                 </details>
               </div>
             </section>
-            <div id="rotationControl" class="drag-guard" draggable="false">
-              <div class="label"><label for="rotation">主图旋转</label> <output id="rotation-v" for="rotation">0°</output></div>
-              <div class="stepper">
-                <button type="button" class="step" data-step="rotation" data-delta="-1" aria-label="旋转 -1°">−</button>
-                <input id="rotation" type="range" min="-30" max="30" value="0" step="1" draggable="false" />
-                <button type="button" class="step" data-step="rotation" data-delta="1" aria-label="旋转 +1°">＋</button>
-              </div>
-              <div class="inline-row" id="rotationRow">
-                <span class="muted-small" id="rotationNote">只旋转中间主图，外圈仍保持水平</span>
-                <button type="button" class="inline-link" id="resetRotation">归零</button>
-              </div>
-            </div>
-            <div class="label"><label for="artSize">主图尺寸</label> <output id="artSize-v">100%</output></div>
-            <div class="stepper">
-              <button type="button" class="step" data-step="artSize" data-delta="-1" aria-label="主图缩小 1%">−</button>
-              <input id="artSize" type="range" min="65" max="110" value="100" step="1" data-item="artSize" data-unit="%" />
-              <button type="button" class="step" data-step="artSize" data-delta="1" aria-label="主图放大 1%">＋</button>
-            </div>
-            <label class="checkline" id="acrylicHoleRow" hidden><input id="acrylicHole" type="checkbox" checked /> 左下角透明圆孔</label>
-            <details class="sub" id="acrylicAppearance" open hidden>
-              <summary>描边与画外背景 <small>当前图片</small></summary>
-              <div class="label"><label for="acrylicOutlineWidth">描边粗细</label> <output id="acrylicOutlineWidth-v">1.5 px</output></div>
-              <input id="acrylicOutlineWidth" type="range" min="0" max="10" step="0.5" value="1.5" data-item="acrylicOutlineWidth" data-unit=" px" />
-              <div class="label"><label for="acrylicOutlineColor">描边颜色</label> <output id="acrylicOutlineColor-v">#627A8A</output></div>
-              <input id="acrylicOutlineColor" type="color" value="#627a8a" />
-              <div class="label"><label for="acrylicOutlineOpacity">描边不透明度</label> <output id="acrylicOutlineOpacity-v">24%</output></div>
-              <input id="acrylicOutlineOpacity" type="range" min="0" max="100" value="24" data-item="acrylicOutlineOpacity" data-unit="%" />
-              <div class="label"><label for="acrylicBackgroundBrightness">画外背景明暗</label> <output id="acrylicBackgroundBrightness-v">8%</output></div>
-              <input id="acrylicBackgroundBrightness" type="range" min="-80" max="80" value="8" data-item="acrylicBackgroundBrightness" data-unit="%" />
-              <div class="range-hints"><span>更暗</span><span>更亮</span></div>
-              <p class="note">明暗只影响主图外圈，0 不额外提亮或压暗。描边粗细设为 0 可关闭描边。</p>
-              <button type="button" class="inline-link" id="resetAcrylic">恢复默认描边与背景</button>
-            </details>
-            <div class="row-actions">
-              <button type="button" class="btn small" id="resetItem">还原这张</button>
-              <button type="button" class="btn small" id="applyAll">应用到全部图片</button>
-            </div>
           </section>
 
           <section class="panel tab-panel" id="p-color" role="tabpanel" aria-labelledby="tab-color" data-panel="color">
@@ -187,6 +176,22 @@
             <h2>04 / 高级 <small>一般不用动</small></h2>
             <div class="label">外观预设 <small class="muted-small">所有图片共用</small></div>
             <div class="presets" role="group" aria-label="外观预设" id="presets"></div>
+
+            <details class="sub" id="d-tilt">
+              <summary>主图倾斜 <small>旋转吧唧 · 当前图片</small></summary>
+              <div id="rotationControl" class="drag-guard" draggable="false">
+                <div class="label"><label for="rotation">倾斜角度</label> <output id="rotation-v" for="rotation">0°</output></div>
+                <div class="stepper">
+                  <button type="button" class="step" data-step="rotation" data-delta="-1" aria-label="旋转 -1°">−</button>
+                  <input id="rotation" type="range" min="-30" max="30" value="0" step="1" draggable="false" />
+                  <button type="button" class="step" data-step="rotation" data-delta="1" aria-label="旋转 +1°">＋</button>
+                </div>
+                <div class="inline-row" id="rotationRow">
+                  <span class="muted-small" id="rotationNote">只旋转中间主图，外圈仍保持水平</span>
+                  <button type="button" class="inline-link" id="resetRotation">恢复官图角度</button>
+                </div>
+              </div>
+            </details>
 
             <details class="sub" id="d-crop">
               <summary>裁切与位置 <small>当前图片</small></summary>

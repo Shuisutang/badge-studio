@@ -27,6 +27,7 @@ test('red/green/blue get their own tint; editing one leaves the others alone', a
 test('rotation -12° survives switching images', async ({ page }) => {
   await upload(page, ['red.png', 'green.png']);
   await selectTile(page, 0);
+  await page.locator('[data-style="tilted"]').click();
   await setRange(page, 'rotation', -12);
   await expect(page.locator('#rotation-v')).toHaveText('-12°');
   await selectTile(page, 1);

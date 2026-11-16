@@ -3,7 +3,7 @@
  * blobs, per-image settings, global settings and the copyright logo. Nothing is
  * sent anywhere.
  */
-import { sanitizeGlobals, sanitizeItemSettings } from '../model/defaults';
+import { migrateItemSettings, sanitizeGlobals } from '../model/defaults';
 import type { GlobalSettings, ItemSettings } from '../model/types';
 
 const DB = 'badge-studio';
@@ -11,12 +11,15 @@ const VERSION = 1;
 const ITEMS = 'items';
 const BLOBS = 'blobs';
 const META = 'meta';
+const ITEM_SCHEMA = 2;
 
 export interface SavedItem {
   id: string;
   name: string;
   order: number;
   settings: ItemSettings;
+  /** 2 = 旋转 is its own style. Missing on records saved by older versions. */
+  schema?: number;
 }
 export interface RestoredItem extends SavedItem {
   blob: Blob;
@@ -78,7 +81,7 @@ export async function save(items: SavedItem[], blobs: Map<string, Blob>, meta: S
     const blob = blobs.get(it.id);
     if (!blob) continue;
     if (!knownBlobs.has(it.id) || persistedBlobs.get(it.id) !== blob) blobStore.put(blob, it.id);
-    itemStore.put(it, it.id);
+    itemStore.put({ ...it, schema: ITEM_SCHEMA }, it.id);
   }
   tx.objectStore(META).put(meta, 'meta');
   await done(tx);
@@ -105,7 +108,7 @@ export async function load(): Promise<{ items: RestoredItem[]; meta: SavedMeta |
       id: i.id,
       name: String(i.name ?? '图片'),
       order: Number(i.order) || 0,
-      settings: sanitizeItemSettings(i.settings),
+      settings: migrateItemSettings(i.settings, Number(i.schema) || 1),
       blob: blobMap.get(i.id)!,
     }))
     .sort((a, b) => a.order - b.order);

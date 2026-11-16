@@ -48,11 +48,11 @@ test('B3 "contain" leaves no transparent holes in the face', async ({ page }) =>
   for (const [x, y] of [[480, 150], [480, 300], [140, 480], [480, 780]] as const) expect((await pixel(page, x, y))[3]).toBe(255);
 });
 
-for (const style of ['rounded', 'square', 'acrylic'] as const) {
+for (const style of ['rounded', 'square', 'tilted', 'acrylic'] as const) {
   test(`zooming out shrinks the complete main panel like art size: ${style}`, async ({ page }) => {
     await upload(page, ['square.png']);
     await page.locator(`[data-style="${style}"]`).click();
-    if (style === 'rounded') await setRange(page, 'rotation', -12);
+    if (style === 'tilted') await setRange(page, 'rotation', -12);
     const fingerprints = () => page.evaluate(() => {
       const hash = (canvas: HTMLCanvasElement) => {
         const data = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data;
@@ -84,11 +84,33 @@ test('B4 transparent PNG prints on white stock (rounded), stays clear on acrylic
 
 test('B5 rotation is kept across a style round-trip', async ({ page }) => {
   await upload(page, ['red.png']);
+  await page.locator('[data-style="tilted"]').click();
   await setRange(page, 'rotation', -12);
   await page.locator('[data-style="square"]').click();
   await expect(page.locator('#rotation')).toBeDisabled();
-  await page.locator('[data-style="rounded"]').click();
+  await page.locator('[data-style="tilted"]').click();
   await expect(page.locator('#rotation-v')).toHaveText('-12°');
+});
+
+test('旋转 style applies the official tilt preset; flat styles stay level', async ({ page }) => {
+  await upload(page, ['square.png']);
+  await expect(page.locator('#rotation')).toBeDisabled();
+  await page.locator('[data-style="tilted"]').click();
+  await settle(page);
+  await expect(page.locator('[data-style="tilted"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#rotation-v')).toHaveText('-3°');
+  await expect(page.locator('#rotation')).toBeEnabled();
+  expect(await page.evaluate(() => window.__badge!.store.selected!.settings)).toMatchObject({ style: 'tilted', rotation: -3 });
+  await setRange(page, 'rotation', -7);
+  await page.locator('#resetRotation').click();
+  await expect(page.locator('#rotation-v')).toHaveText('-3°');
+  // autosave round-trip keeps the style and angle
+  await page.evaluate(() => window.__badge!.saveNow());
+  await page.reload();
+  await page.waitForSelector('html[data-ready="1"]');
+  await expect(page.locator('.tile')).toHaveCount(1);
+  expect(await page.evaluate(() => window.__badge!.store.selected!.settings)).toMatchObject({ style: 'tilted', rotation: -3 });
+  await expect(page.locator('.tile').first()).toContainText('旋转方吧唧 · -3°');
 });
 
 test('B6 a tiny logo does not tint a grey picture', async ({ page }) => {
