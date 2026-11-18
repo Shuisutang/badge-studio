@@ -256,6 +256,34 @@ details.sub > summary small { font-weight: 500; color: #aaa3b3; font-size: 11px;
   .preview-bg { min-height: 340px; }
   .topbar { padding: 0 19px; }
 }
+/* ---- 取色 / colour row ---- */
+.pick-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; margin-top: 12px; align-items: stretch; }
+.pick-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 16px; font-size: 13px; color: #5f43b0; border-color: #d9ccf6; background: #f7f3ff; }
+.btn.pick-btn.active, .btn.pick-mini.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+.pick-ic { width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; position: relative; flex: none; }
+.pick-ic::after { content: ''; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: currentColor; }
+.hex-field { display: flex; align-items: center; gap: 8px; border: 1px solid #e4dfea; border-radius: 10px; padding: 0 10px; background: #fff; min-height: 44px; }
+.hex-field .text-field { border: 0; padding: 0; min-height: 40px; width: 100%; font: 600 14px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.04em; text-transform: uppercase; background: transparent; outline: none; }
+.hex-field:focus-within { border-color: #a088db; box-shadow: 0 0 0 3px #7656c822; }
+.hex-field .text-field.invalid { color: #c0365a; }
+.hex-dot { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #0002; flex: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; min-height: 8px; }
+.chip-color { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #0002; box-shadow: 0 0 0 2px #fff inset; cursor: pointer; padding: 0; }
+.chip-color[aria-pressed='true'] { outline: 3px solid var(--purple); outline-offset: 2px; }
+.color-line { display: flex; align-items: center; gap: 8px; }
+.pick-mini { display: inline-flex; align-items: center; gap: 5px; }
+.pick-mini .pick-ic { width: 12px; height: 12px; }
+.pick-bar { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 8px; background: #fff; border: 1px solid #e4dfea; border-radius: 14px; box-shadow: 0 6px 18px #24212c22; max-width: calc(100% - 16px); }
+.pick-swatch { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #0003; flex: none; }
+.pick-swatch.empty { background: repeating-conic-gradient(#ddd 0 25%, #fff 0 50%) 50% / 10px 10px !important; }
+.pick-hex { font: 600 13px ui-monospace, SFMono-Regular, Menlo, monospace; color: #3a3446; min-width: 7.5em; }
+body.picking #preview { cursor: crosshair; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+body.picking #view3d, body.picking .preview-bg .nav { visibility: hidden; }
+.pick-loupe { position: fixed; z-index: 80; width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 4px solid var(--pick, #fff); box-shadow: 0 0 0 1px #0004, 0 8px 22px #0004; pointer-events: none; background: #fff; }
+.pick-loupe canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.pick-loupe::after { content: ''; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border: 2px solid #fff; box-shadow: 0 0 0 1px #000a; border-radius: 2px; }
+.pick-loupe span { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); font: 700 11px ui-monospace, Menlo, monospace; background: #000a; color: #fff; padding: 1px 6px; border-radius: 8px; }
+
 @media (max-width: 760px) {
   .topbar { height: 52px; padding: 0 14px; }
   .brand p { display: none; }
@@ -318,6 +346,11 @@ details.sub > summary small { font-weight: 500; color: #aaa3b3; font-size: 11px;
   .style-option { min-height: 64px; }
   .swatch { min-height: 60px; }
   .btn.small { padding: 10px 12px; min-height: 40px; }
+  .swatch input[type='color'] { width: 36px; height: 36px; }
+  .pick-btn, .hex-field { min-height: 48px; }
+  .chip-color { width: 44px; height: 44px; }
+  .chips { gap: 10px; }
+  .pick-bar .btn.small { min-height: 40px; }
   .gallery-tools { flex-wrap: wrap; }
   .tile-include { padding: 4px 7px 4px 5px; }
   .tile-remove { width: 30px; height: 30px; }

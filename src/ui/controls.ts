@@ -7,6 +7,8 @@ import { ACRYLIC_ART_BASE, ACRYLIC_FACE, BADGE_FACE, artPanelGeometry, panRange,
 import { ACRYLIC_LIGHT } from '../render/lighting';
 import { $ } from './dom';
 import { guardRotationSlider } from './rotation';
+import { ColorPanel } from './colorPanel';
+import type { Eyedropper } from './eyedropper';
 
 const STYLE_HINTS: Record<ItemSettings['style'], string> = {
   rounded: '圆角马口铁吧唧：微微鼓起的面，左上斜向柔光，边缘包边变暗。',
@@ -24,11 +26,17 @@ const signedDeg = (v: number) => (v > 0 ? '+' : '') + v + '°';
 
 /** Two-way binding between the side panels and the store. */
 export class Controls {
+  readonly colorPanel = new ColorPanel();
+
   constructor(private store: Store) {
     this.bindItemSliders();
     this.bindGlobalSliders();
     this.bindItemButtons();
     this.bindGlobalInputs();
+  }
+
+  attachEyedropper(e: Eyedropper): void {
+    this.colorPanel.attach(e);
   }
 
   private get item(): BadgeItem | null {
@@ -221,6 +229,7 @@ export class Controls {
     $('autoDot').style.background = rgbToHex(automaticTint(it.colors));
     $<HTMLInputElement>('overlayColor').value = hex.toLowerCase();
     $('overlayHex').textContent = hex;
+    this.colorPanel.sync(it, hex, st.overlayMode === 'custom');
     document.querySelectorAll<HTMLButtonElement>('button[data-step="rotation"]').forEach((b) => (b.disabled = st.style !== 'tilted'));
     this.syncPanHint(it);
   }

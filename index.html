@@ -85,7 +85,7 @@
               <div class="label"><label for="acrylicOutlineWidth">描边粗细</label> <output id="acrylicOutlineWidth-v">1.5 px</output></div>
               <input id="acrylicOutlineWidth" type="range" min="0" max="10" step="0.5" value="1.5" data-item="acrylicOutlineWidth" data-unit=" px" />
               <div class="label"><label for="acrylicOutlineColor">描边颜色</label> <output id="acrylicOutlineColor-v">#627A8A</output></div>
-              <input id="acrylicOutlineColor" type="color" value="#627a8a" />
+              <div class="color-line"><input id="acrylicOutlineColor" type="color" value="#627a8a" /><button type="button" class="btn small pick-mini" data-eyedrop="acrylicOutlineColor" aria-label="从图片取描边颜色"><span class="pick-ic" aria-hidden="true"></span>取色</button></div>
               <div class="label"><label for="acrylicOutlineOpacity">描边不透明度</label> <output id="acrylicOutlineOpacity-v">24%</output></div>
               <input id="acrylicOutlineOpacity" type="range" min="0" max="100" value="24" data-item="acrylicOutlineOpacity" data-unit="%" />
               <div class="label"><label for="acrylicBackgroundBrightness">画外背景明暗</label> <output id="acrylicBackgroundBrightness-v">8%</output></div>
@@ -130,7 +130,7 @@
                         <option value="black">黑色</option>
                         <option value="custom">自定义</option>
                       </select>
-                      <input id="markColor" type="color" value="#ffffff" aria-label="自定义文字颜色" />
+                      <div class="color-line"><input id="markColor" type="color" value="#ffffff" aria-label="自定义文字颜色" /><button type="button" class="btn small pick-mini" data-eyedrop="markColor" aria-label="从图片取文字颜色"><span class="pick-ic" aria-hidden="true"></span>取色</button></div>
                     </div>
                   </div>
                   <div id="markLogoSettings" hidden>
@@ -167,9 +167,19 @@
               <button type="button" class="swatch" role="radio" aria-checked="false" data-overlay="black"><span class="dot" style="background:#000"></span>黑色</button>
               <label class="swatch" data-overlay="custom" id="customSwatch"><input id="overlayColor" type="color" value="#c9d8ea" aria-label="自定义叠色" /><span>自定义</span></label>
             </div>
+            <div class="pick-row">
+              <button type="button" class="btn pick-btn" id="pickOverlay" data-eyedrop="overlayColor" aria-label="从图片取色作为叠色"><span class="pick-ic" aria-hidden="true"></span>取色</button>
+              <label class="hex-field"><span class="hex-dot" id="hexDot" aria-hidden="true"></span><span class="sr-only">叠色 HEX 色值</span><input id="overlayHexInput" class="text-field" type="text" inputmode="text" maxlength="7" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="#RRGGBB" /></label>
+            </div>
+            <div class="label">图中配色 <small class="muted-small">从当前图片提取</small></div>
+            <div class="chips" id="paletteChips" role="group" aria-label="从图片提取的颜色"></div>
+            <div id="recentRow">
+              <div class="label">最近使用</div>
+              <div class="chips" id="recentChips" role="group" aria-label="最近使用的颜色"></div>
+            </div>
             <div class="label"><label for="overlayAlpha">叠色浓度</label> <output id="overlayAlpha-v">45%</output></div>
             <input id="overlayAlpha" type="range" min="0" max="100" value="45" data-global="overlayAlpha" data-unit="%" />
-            <p class="note">每张图自动取自己的主色；手动改色只影响当前图片。叠色浓度是所有图片共用的。</p>
+            <p class="note">每张图自动取自己的主色；点「取色」后在预览图上按住拖动、松手确定。手动改色只影响当前图片，叠色浓度是所有图片共用的。</p>
           </section>
 
           <section class="panel tab-panel" id="p-advanced" role="tabpanel" aria-labelledby="tab-advanced" data-panel="advanced">
@@ -275,6 +285,12 @@
             <canvas id="preview" width="960" height="960" role="img" aria-label="当前徽章样机预览" tabindex="-1" hidden></canvas>
             <button type="button" class="nav next" id="nextItem" aria-label="下一张">›</button>
             <button type="button" class="view3d" id="view3d" title="可以拖动旋转的 3D 预览（只用于查看，导出仍是 2D 图）">3D 预览</button>
+            <div id="pickBar" class="pick-bar" role="status" aria-live="polite" hidden>
+              <span id="pickSwatch" class="pick-swatch empty" aria-hidden="true"></span>
+              <span id="pickHex" class="pick-hex">在图片上按住拖动取色</span>
+              <button type="button" class="btn small primary" id="pickConfirm" disabled>确定</button>
+              <button type="button" class="btn small" id="pickCancel">取消</button>
+            </div>
             <div id="busy" class="busy" hidden><span class="spinner" aria-hidden="true"></span><span id="busyText">处理中…</span></div>
           </div>
           <div id="previewActions" class="preview-actions" hidden>
@@ -334,6 +350,7 @@
     </dialog>
     <div id="dropOverlay" class="drop-overlay" hidden><div>松开鼠标导入图片</div></div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="pickLoupe" class="pick-loupe" aria-hidden="true" hidden><canvas width="120" height="120"></canvas><span></span></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

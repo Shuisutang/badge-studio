@@ -15,6 +15,7 @@ import { Gallery } from './ui/gallery';
 import { initSettingsSheet } from './ui/sheet';
 import { Preview3D } from './ui/preview3d';
 import { MusicSearch } from './ui/musicSearch';
+import { Eyedropper } from './ui/eyedropper';
 
 const store = new Store();
 const controls = new Controls(store);
@@ -22,6 +23,8 @@ const gallery = new Gallery(store, removeItem);
 const preview3d = new Preview3D(store);
 const previewCanvas = $<HTMLCanvasElement>('preview');
 const previewCtx = previewCanvas.getContext('2d')!;
+const eyedropper = new Eyedropper(previewCanvas, () => store.selected, () => paintNow());
+controls.attachEyedropper(eyedropper);
 
 // ---------- preview ----------
 let previewFrame = 0;
@@ -33,6 +36,10 @@ function paintPreview(): void {
   const it = store.selected;
   if (!it) {
     previewCtx.clearRect(0, 0, 960, 960);
+    return;
+  }
+  if (eyedropper.active) {
+    eyedropper.paintFlat(previewCtx, 960);
     return;
   }
   renderBadge(previewCtx, { src: it.preview, settings: it.settings, colors: it.colors, globals: store.globals, mark: store.mark }, 960);
