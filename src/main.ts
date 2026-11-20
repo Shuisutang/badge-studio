@@ -16,6 +16,7 @@ import { initSettingsSheet } from './ui/sheet';
 import { Preview3D } from './ui/preview3d';
 import { MusicSearch } from './ui/musicSearch';
 import { Eyedropper } from './ui/eyedropper';
+import { SheetLayoutControl } from './ui/sheetLayout';
 
 const store = new Store();
 const controls = new Controls(store);
@@ -25,6 +26,7 @@ const previewCanvas = $<HTMLCanvasElement>('preview');
 const previewCtx = previewCanvas.getContext('2d')!;
 const eyedropper = new Eyedropper(previewCanvas, () => store.selected, () => paintNow());
 controls.attachEyedropper(eyedropper);
+const sheetLayoutUi = new SheetLayoutControl(store);
 
 // ---------- preview ----------
 let previewFrame = 0;
@@ -130,7 +132,10 @@ store.subscribe((c: Change) => {
       syncHeader();
       break;
   }
-  if (!('live' in c && c.live)) scheduleSave();
+  if (!('live' in c && c.live)) {
+    scheduleSave();
+    sheetLayoutUi.schedule();
+  }
 });
 
 // ---------- loading ----------
@@ -481,7 +486,7 @@ void restore().finally(() => {
 // Test hook (no secrets; only used by the e2e suite).
 declare global {
   interface Window {
-    __badge?: { store: Store; paintNow: () => void; saveNow: () => Promise<void>; preview3d: Preview3D };
+    __badge?: { store: Store; paintNow: () => void; saveNow: () => Promise<void>; preview3d: Preview3D; sheetLayout: SheetLayoutControl };
   }
 }
-window.__badge = { store, paintNow, saveNow, preview3d };
+window.__badge = { store, paintNow, saveNow, preview3d, sheetLayout: sheetLayoutUi };

@@ -256,6 +256,17 @@ details.sub > summary small { font-weight: 500; color: #aaa3b3; font-size: 11px;
   .preview-bg { min-height: 340px; }
   .topbar { padding: 0 19px; }
 }
+/* ---- 拼图布局 ---- */
+.sheet-layout { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center; margin: 4px 0 14px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #faf8fd; }
+.sheet-layout-controls { flex: 1 1 220px; min-width: 0; }
+.sheet-layout .label { margin-top: 0; }
+.sheet-cols { display: grid; grid-template-columns: auto 40px minmax(56px, auto) 40px; gap: 6px; align-items: center; justify-content: start; }
+.sheet-cols .mode { min-height: 40px; padding: 0 16px; }
+.sheet-cols .step { height: 40px; }
+.sheet-cols output { text-align: center; font-weight: 700; color: #5f43b0; font-size: 14px; }
+.sheet-layout p { margin: 8px 0 0; }
+.sheet-preview { display: block; border: 1px solid #e4dfea; border-radius: 6px; background: #fff; max-width: 100%; }
+
 /* ---- 取色 / colour row ---- */
 .pick-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; margin-top: 12px; align-items: stretch; }
 .pick-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 16px; font-size: 13px; color: #5f43b0; border-color: #d9ccf6; background: #f7f3ff; }
@@ -351,6 +362,10 @@ body.picking #view3d, body.picking .preview-bg .nav { visibility: hidden; }
   .chip-color { width: 44px; height: 44px; }
   .chips { gap: 10px; }
   .pick-bar .btn.small { min-height: 40px; }
+  .sheet-cols { grid-template-columns: auto 48px minmax(56px, auto) 48px; }
+  .sheet-cols .mode, .sheet-cols .step { min-height: 48px; height: 48px; }
+  .sheet-layout { flex-direction: column; align-items: stretch; }
+  .sheet-preview { align-self: center; }
   .gallery-tools { flex-wrap: wrap; }
   .tile-include { padding: 4px 7px 4px 5px; }
   .tile-remove { width: 30px; height: 30px; }

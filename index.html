@@ -318,6 +318,19 @@
               <button type="button" class="btn small danger" id="clearAll">清空全部</button>
             </div>
           </div>
+          <section class="sheet-layout" aria-labelledby="sheetColsLabel">
+            <div class="sheet-layout-controls">
+              <div class="label" id="sheetColsLabel">拼图布局 <small class="muted-small">导出展示拼图时的排列</small></div>
+              <div class="sheet-cols" role="group" aria-labelledby="sheetColsLabel">
+                <button type="button" class="mode" id="sheetAuto" aria-pressed="true">自动</button>
+                <button type="button" class="step" id="sheetColsDown" aria-label="减少一列">−</button>
+                <output id="sheetColsV" aria-live="polite">3 列</output>
+                <button type="button" class="step" id="sheetColsUp" aria-label="增加一列">＋</button>
+              </div>
+              <p class="muted-small" id="sheetLayoutInfo"></p>
+            </div>
+            <canvas id="sheetPreview" class="sheet-preview" width="300" height="190" role="img" aria-label="展示拼图布局预览"></canvas>
+          </section>
           <div id="galleryGrid" class="gallery-grid" role="listbox" aria-label="徽章列表" tabindex="0"></div>
           <p class="note">勾选「拼图」的图片会进入展示拼图和 zip。方向键切换，Delete 删除，Alt + 方向键调整顺序。</p>
         </section>

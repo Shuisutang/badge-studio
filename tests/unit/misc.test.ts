@@ -1,14 +1,45 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_CANVAS_AREA, MAX_CANVAS_SIDE, safeFileName, sheetLayout, uniqueNames } from '../../src/export/layout';
+import { MAX_CANVAS_AREA, MAX_CANVAS_SIDE, SHEET_MAX_COLS, autoColumns, rowCounts, safeFileName, sheetLayout, tilePosition, uniqueNames } from '../../src/export/layout';
 import { baseName, isLowRes, looksLikeImage, targetSize } from '../../src/image/sizing';
 import { DEFAULT_GLOBALS, DEFAULT_ITEM, TILT_PRESET, migrateItemSettings, sanitizeGlobals, sanitizeItemSettings } from '../../src/model/defaults';
 
 describe('sheetLayout', () => {
-  it('matches v16 for small batches', () => {
+  it('keeps the v16 tile, padding and canvas size', () => {
     expect(sheetLayout(1)).toMatchObject({ cols: 1, rows: 1, tile: 550, width: 690, height: 690 });
-    expect(sheetLayout(3)).toMatchObject({ cols: 3, rows: 1 });
+    expect(sheetLayout(3)).toMatchObject({ cols: 3, rows: 1, width: 140 + 3 * 550 });
     expect(sheetLayout(5)).toMatchObject({ cols: 3, rows: 2 });
-    expect(sheetLayout(12)).toMatchObject({ cols: 4, rows: 3, tile: 550 });
+    expect(sheetLayout(12)).toMatchObject({ cols: 4, rows: 3, tile: 550, width: 140 + 4 * 550, height: 140 + 3 * 550 });
+  });
+  it('auto layout picks balanced grids with no lonely last row', () => {
+    const rows = (n: number) => rowCounts(sheetLayout(n)).join('+');
+    expect([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(rows)).toEqual([
+      '1', '2', '3', '2+2', '3+2', '3+3', '4+3', '4+4', '3+3+3', '5+5', '4+4+3', '4+4+4',
+    ]);
+    for (let n = 2; n <= 60; n++) {
+      const L = sheetLayout(n);
+      const r = rowCounts(L);
+      expect(r.reduce((a, b) => a + b, 0)).toBe(n);
+      if (r.length > 1) expect(r.at(-1)!, `n=${n}`).toBeGreaterThanOrEqual(L.cols / 2);
+      expect(autoColumns(n)).toBe(L.cols);
+    }
+  });
+  it('centres an incomplete last row and keeps full rows flush', () => {
+    const L = sheetLayout(7); // 4 + 3
+    expect(tilePosition(L, 0)).toEqual({ x: 70, y: 70 });
+    expect(tilePosition(L, 3)).toEqual({ x: 70 + 3 * 550, y: 70 });
+    expect(tilePosition(L, 4)).toEqual({ x: 70 + 275, y: 70 + 550 });
+    expect(tilePosition(L, 6).x + 550 + 275 + 70).toBe(L.width);
+    const nine = sheetLayout(9);
+    expect(tilePosition(nine, 8)).toEqual({ x: 70 + 2 * 550, y: 70 + 2 * 550 });
+  });
+  it('honours a chosen column count, clamped to the item count and the maximum', () => {
+    expect(sheetLayout(9, 550, 70, 4)).toMatchObject({ cols: 4, rows: 3 });
+    expect(rowCounts(sheetLayout(9, 550, 70, 4))).toEqual([4, 4, 1]);
+    expect(sheetLayout(9, 550, 70, 1)).toMatchObject({ cols: 1, rows: 9 });
+    expect(sheetLayout(3, 550, 70, 8)).toMatchObject({ cols: 3, rows: 1 });
+    expect(sheetLayout(40, 550, 70, 99).cols).toBe(SHEET_MAX_COLS);
+    expect(sheetLayout(9, 550, 70, 0).cols).toBe(3);
+    expect(sheetLayout(9, 550, 70, Number.NaN).cols).toBe(3);
   });
   it('stays inside browser canvas limits for huge batches (B10)', () => {
     for (const n of [50, 240, 300, 1000]) {
@@ -94,5 +125,11 @@ describe('sanitize (restored / imported data)', () => {
       bg: 'dark',
     });
     expect(sanitizeGlobals({ markText: 'x'.repeat(200) }).markText).toHaveLength(90);
+    // 拼图布局: old saves have no value → 自动; bad values are clamped
+    expect(sanitizeGlobals({}).sheetCols).toBe(0);
+    expect(sanitizeGlobals({ sheetCols: 3 }).sheetCols).toBe(3);
+    expect(sanitizeGlobals({ sheetCols: 40 }).sheetCols).toBe(12);
+    expect(sanitizeGlobals({ sheetCols: -2 }).sheetCols).toBe(0);
+    expect(sanitizeGlobals({ sheetCols: 'x' }).sheetCols).toBe(0);
   });
 });

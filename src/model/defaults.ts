@@ -23,6 +23,7 @@ export const DEFAULT_GLOBALS: Readonly<GlobalSettings> = Object.freeze({
   markBottom: 18,
   bg: 'checkers',
   resolution: 2000,
+  sheetCols: 0,
 });
 
 export const DEFAULT_ITEM: Readonly<ItemSettings> = Object.freeze({
@@ -66,6 +67,7 @@ export const RANGES = {
   markOpacity: [0, 100],
   markRight: [8, 170],
   markBottom: [8, 150],
+  sheetCols: [0, 12],
 } as const satisfies Record<string, readonly [number, number]>;
 
 /** 旋转款 preset: the main panel tilt seen in official rounded tin badge photos (top edge rising to the right). */
@@ -156,6 +158,8 @@ export function sanitizeGlobals(raw: unknown): GlobalSettings {
     markBottom: num(r.markBottom, d.markBottom, RANGES.markBottom),
     bg: oneOf<PreviewBg>(r.bg, ['checkers', 'white', 'dark'], d.bg),
     resolution: (RESOLUTIONS as readonly number[]).includes(Number(r.resolution)) ? Number(r.resolution) : d.resolution,
+    // Saves from before the 拼图布局 control have no value: they get 自动.
+    sheetCols: Math.round(num(r.sheetCols, d.sheetCols, RANGES.sheetCols)),
   };
 }
 

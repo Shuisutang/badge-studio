@@ -54,7 +54,7 @@ export async function exportSingle(item: BadgeItem, globals: GlobalSettings, mar
 }
 
 export async function renderSheet(items: BadgeItem[], globals: GlobalSettings, mark: Drawable | null): Promise<Blob> {
-  const L = sheetLayout(items.length);
+  const L = sheetLayout(items.length, 550, 70, globals.sheetCols);
   const c = document.createElement('canvas');
   c.width = L.width;
   c.height = L.height;

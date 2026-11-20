@@ -62,6 +62,8 @@ export interface GlobalSettings {
   markBottom: number;
   bg: PreviewBg;
   resolution: number;
+  /** 展示拼图 columns: 0 = 自动 (balanced grid), otherwise 1 … 12. */
+  sheetCols: number;
 }
 
 export interface ColorSamples {
